@@ -47,23 +47,43 @@ function buildXlsx(name) {
 // > parseWorksheet([["X", "Y"], ["12.34", "45.67"]])
 // [{ x: "12.34", y: "45.67" }]
 //
+// > parseWorksheet([["X", "Y"], ["12.34", "45.67"], ["", ""]])
+// [{ x: "12.34", y: "45.67" }]
+//
 // > parseWorksheet([["12.34", "45.67"]])
-// [{ x: "12.34", y: "45.67" }]
+// Error
 //
-// > parseWorksheet([["12.34", "45.67"], ["", ""]])
-// [{ x: "12.34", y: "45.67" }]
+// > parseWorksheet([["X", "invalidKey"], ["12.34", "45.67"]])
+// Error
 //
-// > parseWorksheet([["X", "Y", "Tie", "Tieosa", "Etäisyys", "Ajorata"], ["", "", 4, 117, 4975, 0]])
-// [{ tie: 4, osa: 117, etaisyys: 4975, ajorata: 0 }]
 
 function parseWorksheet(values) {
-  const hasHeader = (x) => x[0][0].match(/[A-Za-z]/) != null;
-  const stripHeader = R.ifElse(hasHeader, R.drop(1), R.identity);
+  const hasHeader = (x) => R.all(R.contains(R.__, HEADERS))(x[0]);
   const onlyNonEmptyRows = R.reject(R.all(R.isEmpty));
-  const removeUndefinedValues = R.pickBy((val, key) => key != null && key !== "" && val != null && val !== "")
-  const tableToObjects = R.map(R.compose(removeUndefinedValues, R.zipObj(KEYS)));
 
-  return R.compose(tableToObjects, onlyNonEmptyRows, stripHeader)(values);
+  if (hasHeader(values)) {
+    return tableToObjects(onlyNonEmptyRows(values));
+  } else {
+    throw new Error("You must specity a header");
+  }
+}
+
+
+// tableToObjects :: [[String]] -> [Object]
+//
+// > parseWorksheet([["X", "Y"], ["12.34", "45.67"]])
+// [{ x: "12.34", y: "45.67" }]
+//
+// > parseWorksheet([["Tie", "Tieosa", "Etäisyys", "Ajorata"], [4, 117, 4975, 0]])
+// [{ tie: 4, osa: 117, etaisyys: 4975, ajorata: 0 }]
+
+function tableToObjects(table) {
+  const headersToKeys = R.map((x) => KEYS[HEADERS.indexOf(x)]);
+
+  const headers = R.head(table);
+  const content = R.tail(table);
+
+  return R.map(R.zipObj(headersToKeys(headers)), content);
 }
 
 const decorateWithAddresses = (coordinates) => decorateWith(LOCALIZED.coordinate, LOCALIZED.address, coordinates);
