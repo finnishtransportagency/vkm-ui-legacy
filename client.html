@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Viitekehysmuunnin</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="static/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Viitekehysmuunnin</h1>
+
+      <p class="lead">Viitekehysmuunnin muuntaa sijaintitietoja koordinaattien (ETRS89-FIN), Liikenneviraston tieosoiteverkon, ja kuntien katuosoiteverkon välillä.</p>
+
+      <div class="well">
+        <h2 class="h4">1. Syötä lähtötieto Excel-pohjaan ja tallenna tekemäsi tiedot.</h2>
+        <div>
+          <a class="btn btn-default" href="excel_templates/koordinaateilla.xlsx">
+            <span class="glyphicon glyphicon-file"></span>&nbsp;Koordinaateilla
+          </a>
+          <a class="btn btn-default" href="excel_templates/tieosoitteilla.xlsx">
+            <span class="glyphicon glyphicon-file"></span>&nbsp;Tieosoitteilla
+          </a>
+        </div>
+      </div>
+
+      <div class="well">
+        <h2 class="h4">2. Lataa täyttämäsi Excel-pohja muuntimeen, ja klikkaa "Lähetä".</h2>
+        <form method="post" action="http://localhost:3000/upload/" id="upload" name="upload" enctype="multipart/form-data">
+          <p><input type="file" name="file" required /></p>
+          <div class="input-group">
+            <input type="submit" class="btn btn-default btn-large" value="Lähetä" />
+          </div>
+        </form>
+      </div>
+
+      <div class="well">
+        <h2 class="h4">3. Muunnin palauttaa muunnetut tiedot uutena Excel-tiedostona.</h2>
+        <div id="reload" class="hidden">
+          <p>Muunnos valmis.</p>
+          <a class="btn btn-default hidden" href="#" id="download">
+            <span class="glyphicon glyphicon-file"></span>&nbsp;Muunnetut tiedot
+          </a>
+        </div>
+        <div class="alert alert-info hidden" role="alert" id="loading">
+          <span class="glyphicon glyphicon-refresh spinning"></span>&nbsp;
+          Muunnos käynnissä. Aineiston koosta riippuen, muunnoksessa voi kestää joitain minuutteja.
+        </div>
+        <div class="alert alert-danger hidden" role="alert" id="validation_error">
+          Muunnos epäonnistui. Tarkista syöttämäsi tiedot.
+        </div>
+        <div class="alert alert-danger hidden" role="alert" id="error">
+          Muunnos epäonnistui. Järjestelmässä virhe. Kokeile myöhemmin uudelleen.
+        </div>
+      </div>
+
+    </div>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="static/client.js"></script>
+  </body>
+</html>
