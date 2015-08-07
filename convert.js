@@ -35,11 +35,14 @@ function fillMissingValuesFromBackend(values) {
   const validGeocode = R.all(hasAll(GEOCODE_KEYS), values);
 
   if (validCoordinates) {
-    return decorateWithAddresses(values).then(decorateWithReverseGeocode);
+    return decorateWithAddresses(values)
+      .then(decorateWithReverseGeocode);
   } else if (validAddresses) {
-    return decorateWithCoordinates(values).then(decorateWithReverseGeocode);
+    return decorateWithCoordinates(values)
+      .then(decorateWithReverseGeocode);
   } else if (validGeocode) {
-    return decorateWithGeocode(values).then(decorateWithAddresses);
+    return decorateWithGeocode(values)
+      .then(decorateWithAddresses);
   } else {
     return new Promise((_, reject) => reject("Parsing failed"));
   }
@@ -48,7 +51,10 @@ function fillMissingValuesFromBackend(values) {
 function buildXlsx(name) {
   return function(data) {
     const valuesOrderedByKeys = data.map(x => KEYS.map(key => R.prop(key, x)));
-    return xlsx.build([{ name: name, data: [HEADERS].concat(valuesOrderedByKeys) }]);
+    return xlsx.build([{
+      name: name,
+      data: [HEADERS].concat(valuesOrderedByKeys)
+    }]);
   }
 }
 
