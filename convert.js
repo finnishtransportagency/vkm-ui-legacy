@@ -122,7 +122,6 @@ function decorateWith(inputType, outputType, values) {
 function decorateWithReverseGeocode(values) {
   const createQueryParams = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
   const reverseGeocodes = values.map((value) => httpGet(REVERSE_GEOCODE_URL, { address: createQueryParams(value) }));
-  console.log(reverseGeocodes);
   return Promise.all(reverseGeocodes)
     .map(parseJSON)
     .then(decorate(values));
