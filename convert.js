@@ -4,10 +4,13 @@ const xlsx = require('node-xlsx');
 const R = require("ramda");
 
 const API_URL = "http://172.17.118.232/vkm/muunnos";
-const HEADERS = ["X", "Y", "Tie", "Tieosa", "Etäisyys", "Ajorata"];
+const GEOCODE_URL = "http://localhost:3000/vkm/geocode";
+const REVERSE_GEOCODE_URL = "http://localhost:3000/vkm/reversegeocode";
+const HEADERS = ["X", "Y", "Tie", "Tieosa", "Etäisyys", "Ajorata", "Katuosoite", "Kunta"];
 const COORDINATE_KEYS = ["x", "y"];
 const ADDRESS_KEYS = ["tie", "osa", "etaisyys", "ajorata"];
-const KEYS = COORDINATE_KEYS.concat(ADDRESS_KEYS);
+const GEOCODE_KEYS = ["osoite", "kunta"];
+const KEYS = COORDINATE_KEYS.concat(ADDRESS_KEYS).concat(GEOCODE_KEYS);
 const LOCALIZED = {
   address: {
     plural: "tieosoitteet",
@@ -29,9 +32,11 @@ exports.convert = function(buffer) {
 function fillMissingValuesFromBackend(values) {
   const validCoordinates = R.all(hasAll(COORDINATE_KEYS), values);
   const validAddresses = R.all(hasAll(ADDRESS_KEYS), values);
+  const validGeocode = R.all(hasAll(GEOCODE_KEYS), values);
 
-  if (validCoordinates) { return decorateWithAddresses(values); }
-  else if (validAddresses) { return decorateWithCoordinates(values); }
+  if (validCoordinates) { return decorateWithAddresses(values).then(decorateWithReverseGeocode); }
+  else if (validAddresses) { return decorateWithCoordinates(values).then(decorateWithReverseGeocode); }
+  else if (validGeocode) { return decorateWithGeocode(values).then(decorateWithAddresses); }
   else { return new Promise((_, reject) => reject("Parsing failed")); }
 }
 
@@ -104,8 +109,28 @@ function decorateWith(inputType, outputType, values) {
   );
 }
 
+function decorateWithReverseGeocode(values) {
+  const createQueryParams = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
+  const reverseGeocodes = values.map((value) => httpGet(REVERSE_GEOCODE_URL, { address: createQueryParams(value) }));
+  console.log(reverseGeocodes);
+  return Promise.all(reverseGeocodes)
+    .map(parseJSON)
+    .then(combineWithWhitelistedKeys(values));
+}
+
+function decorateWithGeocode(values) {
+  const geocodes = values.map((value) => httpGet(GEOCODE_URL, R.pick(COORDINATE_KEYS, value)));
+  return Promise.all(geocodes)
+    .map(R.compose(R.head, R.prop("results"), parseJSON))
+    .then(combineWithWhitelistedKeys(values));
+}
+
 function httpPost(url, params) {
   return rp.post({ url: url, form: params });
+}
+
+function httpGet(url, params) {
+  return rp({ url: url, qs: params });
 }
 
 function parseJSON(json) {
@@ -119,9 +144,13 @@ function parseJSON(json) {
 //
 // > combineWithWhitelistedKeys([{x: 1, bar: 2}])([{foo: 3}])
 // [{x: 1}]
+//
+// > combineWithWhitelistedKeys([{x: 1}])([{x: 2}])
+// [{x: 1}]
 
 function combineWithWhitelistedKeys(xs) {
-  const combineWithXs = R.zipWith(R.merge, xs);
+  const defaults = R.flip(R.merge);
+  const combineWithXs = R.zipWith(defaults, xs);
   return R.compose(R.map(R.pick(KEYS)), combineWithXs);
 }
 
