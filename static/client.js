@@ -12,11 +12,10 @@ $(function() {
     error.addClass("hidden");
   }
 
-  function handlePending(res) {
+  function handlePending() {
     loader.removeClass('hidden');
     ready.addClass("hidden");
     error.addClass("hidden");
-    setTimeout(function() { pollResponse(res); }, 1000);
   }
 
   function handleError() {
@@ -28,8 +27,8 @@ $(function() {
   function pollResponse(res) {
     $.ajax("/status/" + res, {
       statusCode: {
-        200: handleReady,
-        202: handlePending,
+        200: function() { handleReady(res); },
+        202: function() { handlePending(); setTimeout(function() { pollResponse(res); }, 1000); },
         500: handleError
       }
     });
@@ -38,7 +37,7 @@ $(function() {
   $('#upload').on('submit', function(event) {
     event.preventDefault();
 
-    loader.removeClass('hidden');
+    handlePending();
 
     $.ajax({
       url: '/upload',
