@@ -3,22 +3,34 @@ $(function() {
   if (fileName) { pollResponse(fileName); }
 
   var loader = $("#loading");
+  var ready = $("#ready");
+  var error = $("#error");
+  function handleReady(res) {
+    $("#download").attr("href", downloadUrl(res));
+    loader.addClass("hidden");
+    ready.removeClass("hidden");
+    error.addClass("hidden");
+  }
+
+  function handlePending(res) {
+    loader.removeClass('hidden');
+    ready.addClass("hidden");
+    error.addClass("hidden");
+    setTimeout(function() { pollResponse(res); }, 1000);
+  }
+
+  function handleError() {
+    loader.addClass("hidden");
+    ready.addClass("hidden");
+    error.removeClass("hidden");
+  }
+
   function pollResponse(res) {
     $.ajax("/status/" + res, {
       statusCode: {
-        200: function() {
-          loader.addClass("hidden");
-          $("#download").attr("href", downloadUrl(res)).removeClass("hidden");
-          $("#reload").removeClass("hidden");
-        },
-        202: function() {
-          loader.removeClass('hidden');
-          setTimeout(function() { pollResponse(res); }, 1000);
-        },
-        500: function() {
-          loader.addClass("hidden");
-          $("#error").removeClass("hidden");
-        }
+        200: handleReady,
+        202: handlePending,
+        500: handleError
       }
     });
   }
@@ -38,8 +50,7 @@ $(function() {
     }).done(function(res) {
       window.location.hash = res;
       pollResponse(res);
-    });
-
+    }).fail(handleError);
   });
 
   function downloadUrl(fileName) {
