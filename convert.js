@@ -105,7 +105,7 @@ function decorateWith(inputType, outputType, values) {
     json: JSON.stringify(payload)
   };
   return httpPost(API_URL, data).then(
-    R.compose(combineWithWhitelistedKeys(values), R.prop(outputType.plural), parseJSON)
+    R.compose(decorate(values), R.prop(outputType.plural), parseJSON)
   );
 }
 
@@ -115,14 +115,14 @@ function decorateWithReverseGeocode(values) {
   console.log(reverseGeocodes);
   return Promise.all(reverseGeocodes)
     .map(parseJSON)
-    .then(combineWithWhitelistedKeys(values));
+    .then(decorate(values));
 }
 
 function decorateWithGeocode(values) {
   const geocodes = values.map((value) => httpGet(GEOCODE_URL, R.pick(COORDINATE_KEYS, value)));
   return Promise.all(geocodes)
     .map(R.compose(R.head, R.prop("results"), parseJSON))
-    .then(combineWithWhitelistedKeys(values));
+    .then(decorate(values));
 }
 
 function httpPost(url, params) {
@@ -137,21 +137,21 @@ function parseJSON(json) {
   return JSON.parse(json);
 }
 
-// combineWithWhitelistedKeys :: [Object] -> [String] -> [Object]
+// decorate :: [Object] -> [String] -> [Object]
 //
-// > combineWithWhitelistedKeys([{x: 1, y: 2}])([{tie: 3}])
+// > decorate([{x: 1, y: 2}])([{tie: 3}])
 // [{x: 1, y: 2, tie: 3}]
 //
-// > combineWithWhitelistedKeys([{x: 1, bar: 2}])([{foo: 3}])
+// > decorate([{x: 1, bar: 2}])([{foo: 3}])
 // [{x: 1}]
 //
-// > combineWithWhitelistedKeys([{x: 1}])([{x: 2}])
+// > decorate([{x: 1}])([{x: 2}])
 // [{x: 1}]
 
-function combineWithWhitelistedKeys(xs) {
+function decorate(xs) {
   const defaults = R.flip(R.merge);
-  const combineWithXs = R.zipWith(defaults, xs);
-  return R.compose(R.map(R.pick(KEYS)), combineWithXs);
+  const decorateXs = R.zipWith(defaults, xs);
+  return R.compose(R.map(R.pick(KEYS)), decorateXs);
 }
 
 
