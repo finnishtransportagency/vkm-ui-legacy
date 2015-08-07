@@ -129,8 +129,9 @@ function decorateWithReverseGeocode(values) {
 
 function decorateWithGeocode(values) {
   const geocodes = values.map((value) => httpGet(GEOCODE_URL, R.pick(COORDINATE_KEYS, value)));
+  const parse = R.compose(headOr({valid: false, error: "No results found"}), R.prop("results"), parseJSON);
   return Promise.all(geocodes)
-    .map(R.compose(R.head, R.prop("results"), parseJSON))
+    .map(parse)
     .then(decorate(values));
 }
 
