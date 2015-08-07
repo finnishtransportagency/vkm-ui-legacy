@@ -24,16 +24,20 @@ const LOCALIZED = {
 
 exports.convert = function(buffer) {
   const worksheet = xlsx.parse(buffer)[0];
-  const parsedValues = parseWorksheet(worksheet.data);
 
-  return fillMissingValuesFromBackend(parsedValues).then(buildXlsx(worksheet.name));
+  return fillMissingValuesFromBackend(worksheet)
+    .then(buildXlsx(worksheet.name));
 }
 
-function fillMissingValuesFromBackend(values) {
-  const validCoordinates = R.all(hasAll(COORDINATE_KEYS), values);
-  const validAddresses = R.all(hasAll(ADDRESS_KEYS), values);
-  const validGeocode = R.all(hasAll(GEOCODE_KEYS), values);
+function fillMissingValuesFromBackend(worksheet) {
+  const compact = R.filter(Boolean);
+  const headerKeys = headersToKeys(compact(worksheet.data[0]));
 
+  const validCoordinates = R.equals(headerKeys, COORDINATE_KEYS);
+  const validAddresses = R.equals(headerKeys, ADDRESS_KEYS);
+  const validGeocode = R.equals(headerKeys, GEOCODE_KEYS);
+
+  const values = parseWorksheet(worksheet.data);
   if (validCoordinates) {
     return decorateWithAddresses(values)
       .then(decorateWithReverseGeocode);
@@ -94,13 +98,18 @@ function parseWorksheet(values) {
 // [{ tie: 4, osa: 117, etaisyys: 4975, ajorata: 0 }]
 
 function tableToObjects(table) {
-  const headersToKeys = R.map((x) => KEYS[HEADERS.indexOf(x)]);
-
   const headers = R.head(table);
   const content = R.tail(table);
 
   return R.map(R.zipObj(headersToKeys(headers)), content);
 }
+
+// headersToKeys :: [String] -> [String]
+//
+// > headersToKeys(['Etäisyys', 'Katuosoite', 'Kunta'])
+// ['etaisyys', 'osoite', 'kunta']
+
+const headersToKeys = R.map((x) => KEYS[HEADERS.indexOf(x)]);
 
 const decorateWithAddresses = (coordinates) => decorateWith(LOCALIZED.coordinate, LOCALIZED.address, coordinates);
 const decorateWithCoordinates = (addresses) => decorateWith(LOCALIZED.address, LOCALIZED.coordinate, addresses);
