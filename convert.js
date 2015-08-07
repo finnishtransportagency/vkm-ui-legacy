@@ -115,7 +115,7 @@ function decorateWith(inputType, outputType, values) {
     json: JSON.stringify(payload)
   };
   return httpPost(API_URL, data).then(
-    R.compose(decorate(values), R.prop(outputType.plural), parseJSON)
+    R.compose(decorate(values), R.propOr(outputType.plural, []), parseJSON)
   );
 }
 
@@ -143,7 +143,7 @@ function httpGet(url, params) {
 }
 
 function parseJSON(json) {
-  return JSON.parse(json);
+  return json ? JSON.parse(json) : {};
 }
 
 // decorate :: [Object] -> [String] -> [Object]
