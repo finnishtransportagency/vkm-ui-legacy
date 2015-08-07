@@ -34,10 +34,15 @@ function fillMissingValuesFromBackend(values) {
   const validAddresses = R.all(hasAll(ADDRESS_KEYS), values);
   const validGeocode = R.all(hasAll(GEOCODE_KEYS), values);
 
-  if (validCoordinates) { return decorateWithAddresses(values).then(decorateWithReverseGeocode); }
-  else if (validAddresses) { return decorateWithCoordinates(values).then(decorateWithReverseGeocode); }
-  else if (validGeocode) { return decorateWithGeocode(values).then(decorateWithAddresses); }
-  else { return new Promise((_, reject) => reject("Parsing failed")); }
+  if (validCoordinates) {
+    return decorateWithAddresses(values).then(decorateWithReverseGeocode);
+  } else if (validAddresses) {
+    return decorateWithCoordinates(values).then(decorateWithReverseGeocode);
+  } else if (validGeocode) {
+    return decorateWithGeocode(values).then(decorateWithAddresses);
+  } else {
+    return new Promise((_, reject) => reject("Parsing failed"));
+  }
 }
 
 function buildXlsx(name) {
