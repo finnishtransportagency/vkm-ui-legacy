@@ -117,7 +117,8 @@ const decorateWithAddresses = (coordinates) => decorateWith(LOCALIZED.coordinate
 const decorateWithCoordinates = (addresses) => decorateWith(LOCALIZED.address, LOCALIZED.coordinate, addresses);
 
 function decorateWith(inputType, outputType, values) {
-  const payload = R.fromPairs([inputType.plural, values]);
+  const payload = {};
+  payload[inputType.plural] = values;
   const data = {
     in: inputType.singular,
     out: outputType.singular,
