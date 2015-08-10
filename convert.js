@@ -25,19 +25,19 @@ const LOCALIZED = {
 exports.convert = function(buffer) {
   const worksheet = xlsx.parse(buffer)[0];
 
-  return fillMissingValuesFromBackend(worksheet)
+  return fillMissingValuesFromBackend(worksheet.data)
     .then(buildXlsx(worksheet.name));
 }
 
-function fillMissingValuesFromBackend(worksheet) {
+function fillMissingValuesFromBackend(table) {
   const compact = R.filter(Boolean);
-  const headerKeys = headersToKeys(compact(worksheet.data[0]));
+  const headerKeys = headersToKeys(compact(table[0]));
 
   const validCoordinates = R.equals(headerKeys, COORDINATE_KEYS);
   const validAddresses = R.equals(headerKeys, ADDRESS_KEYS);
   const validGeocode = R.equals(headerKeys, GEOCODE_KEYS);
 
-  const values = parseWorksheet(worksheet.data);
+  const values = parseTable(table);
   if (validCoordinates) {
     return decorateWithAddresses(values)
       .then(decorateWithReverseGeocode);
@@ -54,7 +54,9 @@ function fillMissingValuesFromBackend(worksheet) {
 
 function buildXlsx(name) {
   return function(data) {
-    const valuesOrderedByKeys = data.map(x => KEYS.map(key => R.prop(key, x)));
+    const valuesOrderedByKeys = data.map(x => {
+      return KEYS.map(key => R.prop(key, x)).concat(x.valid ? [] : x.error);
+    });
     return xlsx.build([{
       name: name,
       data: [HEADERS].concat(valuesOrderedByKeys)
@@ -62,22 +64,22 @@ function buildXlsx(name) {
   }
 }
 
-// parseWorksheet :: [[String]] -> [Object]
+// parseTable :: [[String]] -> [Object]
 //
-// > parseWorksheet([["X", "Y"], ["12.34", "45.67"]])
+// > parseTable([["X", "Y"], ["12.34", "45.67"]])
 // [{ x: "12.34", y: "45.67" }]
 //
-// > parseWorksheet([["X", "Y"], ["12.34", "45.67"], ["", ""]])
+// > parseTable([["X", "Y"], ["12.34", "45.67"], ["", ""]])
 // [{ x: "12.34", y: "45.67" }]
 //
-// > parseWorksheet([["12.34", "45.67"]])
+// > parseTable([["12.34", "45.67"]])
 // Error
 //
-// > parseWorksheet([["X", "invalidKey"], ["12.34", "45.67"]])
+// > parseTable([["X", "invalidKey"], ["12.34", "45.67"]])
 // Error
 //
 
-function parseWorksheet(values) {
+function parseTable(values) {
   const hasHeader = (x) => R.all(R.contains(R.__, HEADERS))(x[0]);
   const onlyNonEmptyRows = R.reject(R.all(R.isEmpty));
 
@@ -91,10 +93,10 @@ function parseWorksheet(values) {
 
 // tableToObjects :: [[String]] -> [Object]
 //
-// > parseWorksheet([["X", "Y"], ["12.34", "45.67"]])
+// > tableToObjects([["X", "Y"], ["12.34", "45.67"]])
 // [{ x: "12.34", y: "45.67" }]
 //
-// > parseWorksheet([["Tie", "Tieosa", "Etäisyys", "Ajorata"], [4, 117, 4975, 0]])
+// > tableToObjects([["Tie", "Tieosa", "Etäisyys", "Ajorata"], [4, 117, 4975, 0]])
 // [{ tie: 4, osa: 117, etaisyys: 4975, ajorata: 0 }]
 
 function tableToObjects(table) {
@@ -161,29 +163,34 @@ function parseJSON(json) {
 // > decorate([{x: 1, y: 2}])([{tie: 3}])
 // [{x: 1, y: 2, tie: 3}]
 //
-// > decorate([{x: 1, bar: 2}])([{foo: 3}])
-// [{x: 1}]
-//
 // > decorate([{x: 1}])([{x: 2}])
 // [{x: 1}]
 
 function decorate(xs) {
   const defaults = R.flip(R.merge);
-  const decorateXs = R.zipWith(defaults, xs);
-  return R.compose(R.map(R.pick(KEYS)), decorateXs);
+  return R.zipWith(defaults, xs);
+}
+
+// headOr :: a -> [a] -> a
+//
+// > headOr(1)([2])
+// 2
+//
+// > headOr(1)([])
+// 1
+function headOr(defaultVal) {
+  return function(xs) {
+    return xs.length > 0 ? xs[0] : defaultVal;
+  }
 }
 
 
-// hasAll :: [String] -> Object -> Boolean
+// validate :: Object -> Object
 //
-// > hasAll(["foo", "bar"])({foo: 1, bar: 2})
-// true
+// > validate({palautusarvo: 0, virheteksti: "Kohdetta ei löytynyt"})
+// {valid: false, error: "Kohdetta ei löytynyt"}
 //
-// > hasAll(["foo", "bar"])({foo: 1, baz: 2})
-// false
-
-function hasAll(properties) {
-  return function(obj) {
-    return R.all(R.has(R.__, obj), properties);
-  }
+function validate(x) {
+  const validationStatus = x.palautusarvo === 1 ? { valid: true } : { valid: false, error: x.virheteksti };
+  return R.merge(R.omit(['palautusarvo', 'virheteksti'], x), validationStatus);
 }
