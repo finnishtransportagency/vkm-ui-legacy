@@ -21,6 +21,7 @@ const LOCALIZED = {
     singular: "koordinaatti"
   }
 };
+const MISSING_VALUE_ERROR = "Kohdetta ei löytynyt";
 
 exports.convert = function(buffer) {
   const worksheet = xlsx.parse(buffer)[0];
@@ -126,9 +127,8 @@ function decorateWith(inputType, outputType, values) {
     kohdepvm: null,
     json: JSON.stringify(payload)
   };
-  return httpPost(API_URL, data).then(
-    R.compose(decorate(values), R.propOr(outputType.plural, []), parseJSON)
-  );
+  const parse = R.compose(decorate(values), R.propOr([], outputType.plural), parseJSON);
+  return httpPost(API_URL, data).then(parse).map(validate);
 }
 
 function decorateWithReverseGeocode(values) {
@@ -141,7 +141,7 @@ function decorateWithReverseGeocode(values) {
 
 function decorateWithGeocode(values) {
   const geocodes = values.map((value) => httpGet(GEOCODE_URL, R.pick(COORDINATE_KEYS, value)));
-  const parse = R.compose(headOr({valid: false, error: "No results found"}), R.prop("results"), parseJSON);
+  const parse = R.compose(headOr({valid: false, error: MISSING_VALUE_ERROR}), R.prop("results"), parseJSON);
   return Promise.all(geocodes)
     .map(parse)
     .then(decorate(values));
