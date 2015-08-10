@@ -148,7 +148,7 @@ function decorateWithGeocode(values) {
 }
 
 function httpPost(url, params) {
-  return rp.post({ url: url, form: params });
+  return rp.post({ url: url, form: params, encoding: 'binary' });
 }
 
 function httpGet(url, params) {
