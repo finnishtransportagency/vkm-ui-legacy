@@ -19,7 +19,7 @@ $(function() {
   }
 
   function handlePending() {
-    loader.removeClass('hidden');
+    loader.removeClass("hidden");
     ready.addClass("hidden");
     error.addClass("hidden");
   }
@@ -40,14 +40,14 @@ $(function() {
     });
   }
 
-  $('#upload').on('submit', function(event) {
+  $("#upload").on("submit", function(event) {
     event.preventDefault();
 
     handlePending();
 
     $.ajax({
-      url: '/upload',
-      type: 'POST',
+      url: "/upload",
+      type: "POST",
       data: new FormData($(this)[0]),
       cache: false,
       processData: false,

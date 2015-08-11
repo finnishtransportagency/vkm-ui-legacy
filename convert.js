@@ -1,6 +1,6 @@
-const Promise = require('bluebird');
-const rp = require('request-promise');
-const xlsx = require('node-xlsx');
+const Promise = require("bluebird");
+const rp = require("request-promise");
+const xlsx = require("node-xlsx");
 const R = require("ramda");
 
 const API_URL = "http://172.17.118.232/vkm/muunnos";
@@ -130,8 +130,8 @@ function tableToObjects(table) {
 
 // headersToKeys :: [String] -> [String]
 //
-// > headersToKeys(['Etäisyys', 'Katuosoite', 'Kunta'])
-// ['etaisyys', 'osoite', 'kunta']
+// > headersToKeys(["Etäisyys", "Katuosoite", "Kunta"])
+// ["etaisyys", "osoite", "kunta"]
 
 const headersToKeys = R.map((x) => KEYS[HEADERS.indexOf(x)]);
 
@@ -169,7 +169,7 @@ function decorateWithGeocode(values) {
 }
 
 function httpPost(url, params) {
-  return rp.post({ url: url, form: params, encoding: 'binary' });
+  return rp.post({ url: url, form: params, encoding: "binary" });
 }
 
 function httpGet(url, params) {
@@ -214,5 +214,5 @@ function headOr(defaultVal) {
 //
 function validate(x) {
   const validationStatus = x.palautusarvo === 1 ? { valid: true } : { valid: false, error: x.virheteksti };
-  return R.merge(R.omit(['palautusarvo', 'virheteksti'], x), validationStatus);
+  return R.merge(R.omit(["palautusarvo", "virheteksti"], x), validationStatus);
 }
