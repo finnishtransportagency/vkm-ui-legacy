@@ -32,8 +32,8 @@ exports.convert = function(buffer) {
 }
 
 function fillMissingValuesFromBackend(table) {
-  const compact = R.filter(Boolean);
-  const headerKeys = headersToKeys(compact(table[0]));
+  const nonEmpty = R.reject(R.isEmpty);
+  const headerKeys = headersToKeys(nonEmpty(table[0]));
 
   const validCoordinates = R.equals(headerKeys, COORDINATE_KEYS);
   const validAddresses = R.equals(headerKeys, ADDRESS_KEYS);
