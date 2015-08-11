@@ -22,7 +22,7 @@ app.use('/static', express.static('static'));
 app.post('/upload', multer({
   inMemory: true,
   onFileUploadComplete: function(file, req, res) {
-    var promisedFile = frameOfReferenceConverter.convert(file.buffer)
+    const promisedFile = frameOfReferenceConverter.convert(file.buffer)
       .then(data => ({
         name: file.originalname,
         mimetype: file.mimetype,
@@ -64,7 +64,7 @@ app.get('/download/:fileName', function(req, res) {
 
 function ifFileStatus(fileName, callbacks) {
   if (R.has(fileName, app.locals.files)) {
-    var promisedFile = app.locals.files[fileName];
+    const promisedFile = app.locals.files[fileName];
     if (promisedFile.isFulfilled() && promisedFile.value()) { callbacks.ready(promisedFile.value()); }
     else if (promisedFile.isPending()) { callbacks.pending() }
     else { callbacks.error(); }
