@@ -23,7 +23,11 @@ app.post('/upload', multer({
   inMemory: true,
   onFileUploadComplete: function(file, req, res) {
     var promisedFile = frameOfReferenceConverter.convert(file.buffer)
-      .then(buffer => ({ name: file.originalname, mimetype: file.mimetype, buffer: buffer }))
+      .then(data => ({
+        name: file.originalname,
+        mimetype: file.mimetype,
+        buffer: data.xlsx,
+        metadata: data.metadata }))
       .catch(e => console.log(e));
     app.locals.files[file.name] = promisedFile;
     res.end(file.name, 'utf-8');
@@ -36,7 +40,7 @@ app.get("/status/:fileName", function(req, res) {
   const fileName = req.params.fileName;
 
   ifFileStatus(fileName, {
-    ready: () => res.sendStatus(200),
+    ready: (file) => res.json(file.metadata),
     pending: () => res.sendStatus(202),
     error: () => res.sendStatus(500),
     notFound: () => res.sendStatus(404)

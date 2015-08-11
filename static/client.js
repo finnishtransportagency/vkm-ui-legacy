@@ -5,11 +5,17 @@ $(function() {
   var loader = $("#loading");
   var ready = $("#ready");
   var error = $("#error");
-  function handleReady(res) {
-    $("#download").attr("href", downloadUrl(res));
+  function handleReady(fileName, res) {
+    $("#download").attr("href", downloadUrl(fileName));
     loader.addClass("hidden");
     ready.removeClass("hidden");
     error.addClass("hidden");
+    if (res.errors) {
+      ready.find(".errors").text("Virheellisiä rivejä " + res.errorCount +
+          " kpl alkaen riviltä " + res.firstError + ".");
+    } else {
+      ready.find(".errors").empty();
+    }
   }
 
   function handlePending() {
@@ -18,7 +24,7 @@ $(function() {
     error.addClass("hidden");
   }
 
-  function handleError() {
+  function handleError(res) {
     loader.addClass("hidden");
     ready.addClass("hidden");
     error.removeClass("hidden");
@@ -27,9 +33,9 @@ $(function() {
   function pollResponse(res) {
     $.ajax("/status/" + res, {
       statusCode: {
-        200: function() { handleReady(res); },
+        200: function(response) { handleReady(res, response); },
         202: function() { handlePending(); setTimeout(function() { pollResponse(res); }, 1000); },
-        500: handleError
+        500: function() { handleError(res); }
       }
     });
   }

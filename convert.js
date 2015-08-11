@@ -7,6 +7,7 @@ const API_URL = "http://172.17.118.232/vkm/muunnos";
 const GEOCODE_URL = "http://localhost:3000/vkm/geocode";
 const REVERSE_GEOCODE_URL = "http://localhost:3000/vkm/reversegeocode";
 const HEADERS = ["X", "Y", "Tie", "Tieosa", "Etäisyys", "Ajorata", "Katuosoite", "Kunta"];
+const ERROR_HEADER = "Virheviesti";
 const COORDINATE_KEYS = ["x", "y"];
 const ADDRESS_KEYS = ["tie", "osa", "etaisyys", "ajorata"];
 const GEOCODE_KEYS = ["osoite", "kunta"];
@@ -27,7 +28,7 @@ exports.convert = function(buffer) {
   const worksheet = xlsx.parse(buffer)[0];
 
   return fillMissingValuesFromBackend(worksheet.data)
-    .then(buildXlsx(worksheet.name));
+    .then(buildOutput(worksheet.name));
 }
 
 function fillMissingValuesFromBackend(table) {
@@ -53,15 +54,35 @@ function fillMissingValuesFromBackend(table) {
   }
 }
 
-function buildXlsx(name) {
+function buildOutput(fileName) {
   return function(data) {
+    const metadata = getMetadata(data);
     const valuesOrderedByKeys = data.map(x => {
-      return KEYS.map(key => R.prop(key, x)).concat(x.valid ? [] : x.error);
+      const valueOrderedByKeys = KEYS.map(key => R.prop(key, x));
+      return x.valid ? valueOrderedByKeys : valueOrderedByKeys.concat(x.error);
     });
-    return xlsx.build([{
-      name: name,
-      data: [HEADERS].concat(valuesOrderedByKeys)
-    }]);
+    const headerRow = metadata.errors ? HEADERS.concat(ERROR_HEADER) : HEADERS;
+    const table = [headerRow].concat(valuesOrderedByKeys);
+    return {
+      xlsx: xlsx.build([{name: fileName, data: table }]),
+      metadata: metadata
+    };
+  }
+}
+
+function getMetadata(data) {
+  const notValid = R.compose(R.not, R.prop("valid"));
+  if (R.any(notValid, data)) {
+    const rowOffset = 2;
+    return {
+      errors: true,
+      errorCount: R.filter(notValid, data).length,
+      firstError: R.findIndex(notValid, data) + rowOffset
+    }
+  } else {
+    return {
+      errors: false
+    };
   }
 }
 
