@@ -5,6 +5,8 @@ $(function() {
   var loader = $("#loading");
   var ready = $("#ready");
   var error = $("#error");
+  var validationError = $("#validation_error");
+
   function handleReady(fileName, res) {
     $("#download").attr("href", downloadUrl(fileName));
     loader.addClass("hidden");
@@ -22,12 +24,28 @@ $(function() {
     loader.removeClass("hidden");
     ready.addClass("hidden");
     error.addClass("hidden");
+    validationError.addClass("hidden");
   }
 
   function handleError(res) {
     loader.addClass("hidden");
     ready.addClass("hidden");
+    validationError.addClass("hidden");
     error.removeClass("hidden");
+  }
+
+  function handleError(res) {
+    loader.addClass("hidden");
+    ready.addClass("hidden");
+    validationError.addClass("hidden");
+    error.removeClass("hidden");
+  }
+
+  function handleValidationError() {
+    loader.addClass("hidden");
+    ready.addClass("hidden");
+    error.addClass("hidden");
+    validationError.removeClass("hidden");
   }
 
   function pollResponse(res) {
@@ -35,6 +53,7 @@ $(function() {
       statusCode: {
         200: function(response) { handleReady(res, response); },
         202: function() { handlePending(); setTimeout(function() { pollResponse(res); }, 1000); },
+        400: handleValidationError,
         500: function() { handleError(res); }
       }
     });

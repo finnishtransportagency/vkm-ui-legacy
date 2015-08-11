@@ -24,11 +24,12 @@ app.post("/upload", multer({
   onFileUploadComplete: function(file, req, res) {
     const promisedFile = frameOfReferenceConverter.convert(file.buffer)
       .then(data => ({
+        valid: true,
         name: file.originalname,
         mimetype: file.mimetype,
         buffer: data.xlsx,
         metadata: data.metadata }))
-      .catch(e => console.log(e));
+      .catch(e => ({ valid: false }))
     app.locals.files[file.name] = promisedFile;
     res.end(file.name, "utf-8");
     promisedFile.delay(CACHE_EXPIRATION_TIMEOUT)
@@ -43,6 +44,7 @@ app.get("/status/:fileName", function(req, res) {
     ready: (file) => res.json(file.metadata),
     pending: () => res.sendStatus(202),
     error: () => res.sendStatus(500),
+    badRequest: () => res.sendStatus(400),
     notFound: () => res.sendStatus(404)
   });
 })
@@ -58,6 +60,7 @@ app.get("/download/:fileName", function(req, res) {
     },
     pending: () => res.end("Ladataan...", "utf-8"),
     error: () => res.sendStatus(500),
+    badRequest: () => res.sendStatus(400),
     notFound: () => res.sendStatus(404)
   });
 });
@@ -65,9 +68,18 @@ app.get("/download/:fileName", function(req, res) {
 function ifFileStatus(fileName, callbacks) {
   if (R.has(fileName, app.locals.files)) {
     const promisedFile = app.locals.files[fileName];
-    if (promisedFile.isFulfilled() && promisedFile.value()) { callbacks.ready(promisedFile.value()); }
-    else if (promisedFile.isPending()) { callbacks.pending() }
-    else { callbacks.error(); }
+    if (promisedFile.isFulfilled()) {
+      const file = promisedFile.value();
+      if (file.valid) {
+        callbacks.ready(file);
+      } else {
+        callbacks.badRequest();
+      }
+    } else if (promisedFile.isPending()) {
+      callbacks.pending()
+    } else {
+      callbacks.error();
+    }
   } else {
     callbacks.notFound();
   }
