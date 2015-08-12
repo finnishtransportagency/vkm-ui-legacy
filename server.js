@@ -29,7 +29,9 @@ app.post("/upload", multer({
         mimetype: file.mimetype,
         buffer: data.xlsx,
         metadata: data.metadata }))
-      .catch(e => ({ valid: false }))
+      .error(e => ({ valid: false, reason: Promise.OperationalError }))
+      .catch(e => ({ valid: false }));
+
     app.locals.files[file.name] = promisedFile;
     res.end(file.name, "utf-8");
     promisedFile.delay(CACHE_EXPIRATION_TIMEOUT)
@@ -72,8 +74,10 @@ function ifFileStatus(fileName, callbacks) {
       const file = promisedFile.value();
       if (file.valid) {
         callbacks.ready(file);
-      } else {
+      } else if (file.reason === Promise.OperationalError) {
         callbacks.badRequest();
+      } else {
+        callbacks.error();
       }
     } else if (promisedFile.isPending()) {
       callbacks.pending()
