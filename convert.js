@@ -34,26 +34,22 @@ exports.convert = function(buffer) {
 }
 
 function fillMissingValuesFromBackend(table) {
+  const values = parseTable(table);
+  const valid = !R.any(R.isNil, R.flatten(R.map(R.values, values)));
+
   const nonEmpty = R.reject(R.isEmpty);
   const headerKeys = headersToKeys(nonEmpty(table[0]));
 
-  const validCoordinates = R.equals(headerKeys, COORDINATE_KEYS);
-  const validAddresses = R.equals(headerKeys, ADDRESS_KEYS);
-  const validGeocode = R.equals(headerKeys, GEOCODE_KEYS);
+  const coordinates = R.contains(headerKeys, COORDINATE_KEYS);
+  const addresses = R.equals(headerKeys, ADDRESS_KEYS);
+  const geocode = R.equals(headerKeys, GEOCODE_KEYS);
 
-  const values = parseTable(table);
-  if (validCoordinates) {
-    return decorateWithAddresses(values)
-      .then(decorateWithReverseGeocode);
-  } else if (validAddresses) {
-    return decorateWithCoordinates(values)
-      .then(decorateWithReverseGeocode);
-  } else if (validGeocode) {
-    return decorateWithGeocode(values)
-      .then(decorateWithAddresses);
-  } else {
-    return new Promise((_, reject) => reject("Parsing failed"));
+  if (valid) {
+    if (coordinates) return decorateWithAddresses(values).then(decorateWithReverseGeocode);
+    if (addresses) return decorateWithCoordinates(values).then(decorateWithReverseGeocode);
+    if (geocode) return decorateWithGeocode(values).then(decorateWithAddresses);
   }
+  return new Promise((_, reject) => reject("Parsing failed"));
 }
 
 function buildOutput(fileName) {
