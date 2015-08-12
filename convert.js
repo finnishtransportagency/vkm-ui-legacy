@@ -177,7 +177,8 @@ function decorateWithGeocode(values) {
 }
 
 function httpPost(url, params) {
-  return rp.post({ url: url, form: params, encoding: "binary" });
+  return rp.post({ url: url, form: params, encoding: "utf-8" })
+    .then(x => x.replace(/ï¿½/g, "ö"));
 }
 
 function httpGet(url, params) {
