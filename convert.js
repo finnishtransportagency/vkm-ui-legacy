@@ -176,8 +176,8 @@ function httpGet(url, params) {
   return rp({ url: url, qs: params });
 }
 
-function parseJSON(json) {
-  return json ? JSON.parse(json) : {};
+function parseJSON(str) {
+  return str.trim() ? JSON.parse(str) : {};
 }
 
 // decorate :: [Object] -> [String] -> [Object]
