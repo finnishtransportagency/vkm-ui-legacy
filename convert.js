@@ -24,6 +24,7 @@ const LOCALIZED = {
   }
 };
 const MISSING_VALUE_ERROR = "Kohdetta ei löytynyt";
+const CONCURRENCY_LIMIT = 5;
 
 exports.convert = function(buffer) {
   const worksheet = xlsx.parse(buffer)[0];
@@ -160,17 +161,17 @@ function decorateWith(inputType, outputType, values, whitelistedKeys) {
 }
 
 function decorateWithReverseGeocode(values) {
-  const reverseGeocodes = values.map((value) => httpGet(REVERSE_GEOCODE_URL, R.pick(COORDINATE_KEYS, value)));
-  return Promise.all(reverseGeocodes)
+  const reverseGeocode = value => httpGet(REVERSE_GEOCODE_URL, R.pick(COORDINATE_KEYS, value));
+  return Promise.map(values, reverseGeocode, { concurrency: CONCURRENCY_LIMIT })
     .map(R.compose(R.pick(GEOCODE_KEYS), parseJSON))
     .then(decorate(values));
 }
 
 function decorateWithGeocode(values) {
   const createQueryParams = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
-  const geocodes = values.map((value) => httpGet(GEOCODE_URL, { address: createQueryParams(value) }));
+  const geocode = value => httpGet(GEOCODE_URL, { address: createQueryParams(value) });
   const parse = R.compose(headOr({valid: false, error: MISSING_VALUE_ERROR}), R.prop("results"), parseJSON);
-  return Promise.all(geocodes)
+  return Promise.map(values, geocode, { concurrency: CONCURRENCY_LIMIT })
     .map(parse)
     .then(decorate(values));
 }
