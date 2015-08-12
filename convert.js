@@ -153,15 +153,15 @@ function decorateWith(inputType, outputType, values) {
 }
 
 function decorateWithReverseGeocode(values) {
-  const createQueryParams = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
-  const reverseGeocodes = values.map((value) => httpGet(REVERSE_GEOCODE_URL, { address: createQueryParams(value) }));
+  const reverseGeocodes = values.map((value) => httpGet(REVERSE_GEOCODE_URL, R.pick(COORDINATE_KEYS, value)));
   return Promise.all(reverseGeocodes)
     .map(parseJSON)
     .then(decorate(values));
 }
 
 function decorateWithGeocode(values) {
-  const geocodes = values.map((value) => httpGet(GEOCODE_URL, R.pick(COORDINATE_KEYS, value)));
+  const createQueryParams = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
+  const geocodes = values.map((value) => httpGet(GEOCODE_URL, { address: createQueryParams(value) }));
   const parse = R.compose(headOr({valid: false, error: MISSING_VALUE_ERROR}), R.prop("results"), parseJSON);
   return Promise.all(geocodes)
     .map(parse)
