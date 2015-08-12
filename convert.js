@@ -11,6 +11,7 @@ const ERROR_HEADER = "Virheviesti";
 const COORDINATE_KEYS = ["x", "y"];
 const ADDRESS_KEYS = ["tie", "osa", "etaisyys", "ajorata"];
 const GEOCODE_KEYS = ["osoite", "kunta"];
+const ERROR_KEYS = ["palautusarvo", "virheteksti"];
 const KEYS = COORDINATE_KEYS.concat(ADDRESS_KEYS).concat(GEOCODE_KEYS);
 const LOCALIZED = {
   address: {
@@ -135,10 +136,10 @@ function tableToObjects(table) {
 
 const headersToKeys = R.map((x) => KEYS[HEADERS.indexOf(x)]);
 
-const decorateWithAddresses = (coordinates) => decorateWith(LOCALIZED.coordinate, LOCALIZED.address, coordinates);
-const decorateWithCoordinates = (addresses) => decorateWith(LOCALIZED.address, LOCALIZED.coordinate, addresses);
+const decorateWithAddresses = (coordinates) => decorateWith(LOCALIZED.coordinate, LOCALIZED.address, coordinates, ADDRESS_KEYS);
+const decorateWithCoordinates = (addresses) => decorateWith(LOCALIZED.address, LOCALIZED.coordinate, addresses, COORDINATE_KEYS);
 
-function decorateWith(inputType, outputType, values) {
+function decorateWith(inputType, outputType, values, whitelistedKeys) {
   const payload = {};
   payload[inputType.plural] = values;
   const data = {
@@ -148,14 +149,19 @@ function decorateWith(inputType, outputType, values) {
     kohdepvm: null,
     json: JSON.stringify(payload)
   };
-  const parse = R.compose(decorate(values), R.propOr([], outputType.plural), parseJSON);
+  const parse = R.compose(
+      decorate(values),
+      R.map(R.pick(whitelistedKeys.concat(ERROR_KEYS))),
+      R.propOr([], outputType.plural),
+      parseJSON
+  );
   return httpPost(API_URL, data).then(parse).map(validate);
 }
 
 function decorateWithReverseGeocode(values) {
   const reverseGeocodes = values.map((value) => httpGet(REVERSE_GEOCODE_URL, R.pick(COORDINATE_KEYS, value)));
   return Promise.all(reverseGeocodes)
-    .map(parseJSON)
+    .map(R.compose(R.pick(GEOCODE_KEYS), parseJSON))
     .then(decorate(values));
 }
 
@@ -214,5 +220,5 @@ function headOr(defaultVal) {
 //
 function validate(x) {
   const validationStatus = x.palautusarvo === 1 ? { valid: true } : { valid: false, error: x.virheteksti };
-  return R.merge(R.omit(["palautusarvo", "virheteksti"], x), validationStatus);
+  return R.merge(R.omit(ERROR_KEYS, x), validationStatus);
 }
