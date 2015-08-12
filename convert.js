@@ -150,12 +150,13 @@ function decorateWith(inputType, outputType, values, whitelistedKeys) {
     json: JSON.stringify(payload)
   };
   const parse = R.compose(
+      R.map(validate),
       decorate(values),
       R.map(R.pick(whitelistedKeys.concat(ERROR_KEYS))),
       R.propOr([], outputType.plural),
       parseJSON
   );
-  return httpPost(API_URL, data).then(parse).map(validate);
+  return httpPost(API_URL, data).then(parse);
 }
 
 function decorateWithReverseGeocode(values) {
