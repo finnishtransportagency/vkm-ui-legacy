@@ -3,9 +3,9 @@ const rp = require("request-promise");
 const xlsx = require("node-xlsx");
 const R = require("ramda");
 
-const API_URL = "http://172.17.118.232/vkm/muunnos";
-const GEOCODE_URL = "http://localhost:3000/vkm/geocode";
-const REVERSE_GEOCODE_URL = "http://localhost:3000/vkm/reversegeocode";
+const API_URL = "http://10.129.65.32:8997/vkm/muunnos";
+const GEOCODE_URL = "http://10.129.65.32:8997/vkm/geocode";
+const REVERSE_GEOCODE_URL = "http://10.129.65.32:8997/vkm/reversegeocode";
 const HEADERS = ["X", "Y", "Tie", "Tieosa", "Etäisyys", "Ajorata", "Katuosoite", "Kunta"];
 const ERROR_HEADER = "Virheviesti";
 const COORDINATE_KEYS = ["x", "y"];
