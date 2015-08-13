@@ -6,6 +6,7 @@ const R = require("ramda");
 const frameOfReferenceConverter = require("./convert.js");
 
 const CACHE_EXPIRATION_TIMEOUT = 60 * 60 * 1000;
+const PARSE_ERROR = Symbol();
 
 const app = express();
 const server = app.listen(3000);
@@ -29,7 +30,7 @@ app.post("/upload", multer({
         mimetype: file.mimetype,
         buffer: data.xlsx,
         metadata: data.metadata }))
-      .error(e => ({ valid: false, reason: Promise.OperationalError }))
+      .error(e => ({ valid: false, reason: PARSE_ERROR })
       .catch(e => ({ valid: false }));
 
     app.locals.files[file.name] = promisedFile;
@@ -74,7 +75,7 @@ function ifFileStatus(fileName, callbacks) {
       const file = promisedFile.value();
       if (file.valid) {
         callbacks.ready(file);
-      } else if (file.reason === Promise.OperationalError) {
+      } else if (file.reason === PARSE_ERROR) {
         callbacks.badRequest();
       } else {
         callbacks.error();
