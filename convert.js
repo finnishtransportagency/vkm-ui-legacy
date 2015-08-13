@@ -11,7 +11,8 @@ const ERROR_HEADER = "Virheviesti";
 const COORDINATE_KEYS = ["x", "y"];
 const ADDRESS_KEYS = ["tie", "osa", "etaisyys", "ajorata"];
 const GEOCODE_KEYS = ["osoite", "kunta"];
-const ERROR_KEYS = ["palautusarvo", "virheteksti"];
+const EXTERNAL_ERROR_KEYS = ["palautusarvo", "virheteksti"];
+const ERROR_KEYS = ["valid", "error"].concat(EXTERNAL_ERROR_KEYS);
 const KEYS = COORDINATE_KEYS.concat(ADDRESS_KEYS).concat(GEOCODE_KEYS);
 const LOCALIZED = {
   address: {
@@ -217,7 +218,11 @@ function headOr(defaultVal) {
 // > validate({palautusarvo: 0, virheteksti: "Kohdetta ei löytynyt"})
 // {valid: false, error: "Kohdetta ei löytynyt"}
 //
+// > validate({valid: true, foo: 1})
+// {valid: true, foo: 1}
+
 function validate(x) {
+  if (R.has("valid", x)) return x;
   const validationStatus = x.palautusarvo === 1 ? { valid: true } : { valid: false, error: x.virheteksti };
-  return R.merge(R.omit(ERROR_KEYS, x), validationStatus);
+  return R.merge(R.omit(EXTERNAL_ERROR_KEYS, x), validationStatus);
 }
