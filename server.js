@@ -30,7 +30,7 @@ app.post("/upload", multer({
         mimetype: file.mimetype,
         buffer: data.xlsx,
         metadata: data.metadata }))
-      .error(e => ({ valid: false, reason: PARSE_ERROR })
+      .error(e => ({ valid: false, reason: PARSE_ERROR }))
       .catch(e => ({ valid: false }));
 
     app.locals.files[file.name] = promisedFile;
