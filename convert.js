@@ -147,14 +147,12 @@ function decorateWith(inputType, outputType, values, whitelistedKeys) {
     kohdepvm: null,
     json: JSON.stringify(payload)
   };
-  const parse = R.compose(
-      R.map(validate),
-      decorate(values),
-      R.map(R.pick(whitelistedKeys.concat(ERROR_KEYS))),
-      R.propOr([], outputType.plural),
-      parseJSON
-  );
-  return httpPost(API_URL, data).then(parse);
+  return httpPost(API_URL, data).then(R.pipe(
+        parseJSON,
+        R.propOr(values, outputType.plural),
+        R.map(R.pick(whitelistedKeys.concat(ERROR_KEYS))),
+        decorate(values),
+        R.map(validate)));
 }
 
 function decorateWithReverseGeocode(values) {
@@ -167,9 +165,11 @@ function decorateWithReverseGeocode(values) {
 function decorateWithGeocode(values) {
   const createQueryParams = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
   const geocode = value => httpGet(GEOCODE_URL, { address: createQueryParams(value) });
-  const parse = R.compose(headOr({valid: false, error: MISSING_VALUE_ERROR}), R.prop("results"), parseJSON);
   return Promise.map(values, geocode, { concurrency: CONCURRENCY_LIMIT })
-    .map(parse)
+    .map(R.pipe(
+      parseJSON,
+      R.prop("results"),
+      headOr({valid: false, error: MISSING_VALUE_ERROR})))
     .then(decorate(values));
 }
 
