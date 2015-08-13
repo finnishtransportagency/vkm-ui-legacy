@@ -50,7 +50,7 @@ function fillMissingValuesFromBackend(table) {
     if (addresses) return decorateWithCoordinates(values).then(decorateWithReverseGeocode);
     if (geocode) return decorateWithGeocode(values).then(decorateWithAddresses);
   }
-  return new Promise((_, reject) => reject("Parsing failed"));
+  return new Promise((_, reject) => reject({ e: "Parsing failed" }));
 }
 
 function buildOutput(fileName) {
