@@ -28,29 +28,37 @@ const MISSING_VALUE_ERROR = "Kohdetta ei löytynyt";
 const CONCURRENCY_LIMIT = 5;
 
 exports.convert = function(buffer) {
-  const worksheet = xlsx.parse(buffer)[0];
+  const parseInput = Promise.method(buffer => xlsx.parse(buffer)[0])
 
-  return fillMissingValuesFromBackend(worksheet.data)
-    .then(buildOutput(worksheet.name));
+  return parseInput(buffer).catch(_ => Promise.reject(ParseError)).then(worksheet =>
+      fillMissingValuesFromBackend(worksheet.data)
+        .then(buildOutput(worksheet.name)));
 }
+
+const ParseError = Symbol();
+exports.ParseError = ParseError;
 
 function fillMissingValuesFromBackend(table) {
   const values = parseTable(table);
+  const validate = x => R.any(R.or(R.isNil, R.isEmpty), R.values(x));
   const valid = !R.any(R.isNil, R.flatten(R.map(R.values, values)));
 
-  const nonEmpty = R.reject(R.isEmpty);
-  const headerKeys = headersToKeys(nonEmpty(table[0]));
-
-  const coordinates = R.equals(headerKeys, COORDINATE_KEYS);
-  const addresses = R.equals(headerKeys, ADDRESS_KEYS);
-  const geocode = R.equals(headerKeys, GEOCODE_KEYS);
-
   if (valid) {
+    const nonEmpty = R.reject(R.isEmpty);
+    const headerKeys = headersToKeys(nonEmpty(table[0]));
+
+    const coordinates = R.equals(headerKeys, COORDINATE_KEYS);
+    const addresses = R.equals(headerKeys, ADDRESS_KEYS);
+    const geocode = R.equals(headerKeys, GEOCODE_KEYS);
+
     if (coordinates) return decorateWithAddresses(values).then(decorateWithReverseGeocode);
     if (addresses) return decorateWithCoordinates(values).then(decorateWithReverseGeocode);
     if (geocode) return decorateWithGeocode(values).then(decorateWithAddresses);
+  } else {
+    return Promise.reject(validationError(validate, values));
   }
-  return new Promise((_, reject) => reject({ e: "Parsing failed" }));
+
+  return Promise.reject(ParseError);
 }
 
 function buildOutput(fileName) {
@@ -72,16 +80,18 @@ function buildOutput(fileName) {
 function getMetadata(data) {
   const notValid = R.compose(R.not, R.prop("valid"));
   if (R.any(notValid, data)) {
-    const rowOffset = 2;
-    return {
-      errors: true,
-      errorCount: R.filter(notValid, data).length,
-      firstError: R.findIndex(notValid, data) + rowOffset
-    }
+    return validationError(notValid, data);
   } else {
-    return {
-      errors: false
-    };
+    return { errors: false };
+  }
+}
+
+function validationError(validationFn, data) {
+  const rowOffset = 2;
+  return {
+    errors: true,
+    errorCount: R.filter(validationFn, data).length,
+    firstError: R.findIndex(validationFn, data) + rowOffset
   }
 }
 

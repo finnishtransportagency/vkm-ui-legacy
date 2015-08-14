@@ -4,10 +4,9 @@ const streamifier = require("streamifier");
 const R = require("ramda");
 const errors = require('request-promise/errors');
 
-const frameOfReferenceConverter = require("./convert.js");
+const converter = require("./convert.js");
 
 const CACHE_EXPIRATION_TIMEOUT = 60 * 60 * 1000;
-const PARSE_ERROR = Symbol();
 
 const app = express();
 const server = app.listen(3000);
@@ -22,15 +21,15 @@ app.use("/static", express.static("static"));
 app.post("/upload", multer({
   inMemory: true,
   onFileUploadComplete: function(file, req, res) {
-    const promisedFile = frameOfReferenceConverter.convert(file.buffer)
+    const promisedFile = converter.convert(file.buffer)
       .then(data => ({
         valid: true,
         name: file.originalname,
         mimetype: file.mimetype,
         buffer: data.xlsx,
         metadata: data.metadata }))
-      .catch(errors.RequestError, e => ({ valid: false }))
-      .error(e => ({ valid: false, reason: PARSE_ERROR }))
+      .catch(errors.RequestError, e => ({ valid: false, reason: errors.RequestError }))
+      .error(e => ({ valid: false, reason: converter.ParseError, metadata: e }))
       .catch(e => ({ valid: false }));
 
     app.locals.files[file.name] = promisedFile;
@@ -47,7 +46,7 @@ app.get("/status/:fileName", function(req, res) {
     ready: (file) => res.json(file.metadata),
     pending: () => res.sendStatus(202),
     error: () => res.sendStatus(500),
-    badRequest: () => res.sendStatus(400),
+    badRequest: (file) => res.status(400).json(file.metadata),
     notFound: () => res.sendStatus(404)
   });
 })
@@ -75,8 +74,8 @@ function ifFileStatus(fileName, callbacks) {
       const file = promisedFile.value();
       if (file.valid) {
         callbacks.ready(file);
-      } else if (file.reason === PARSE_ERROR) {
-        callbacks.badRequest();
+      } else if (file.reason === converter.ParseError) {
+        callbacks.badRequest(file);
       } else {
         callbacks.error();
       }

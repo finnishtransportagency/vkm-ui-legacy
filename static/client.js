@@ -12,11 +12,15 @@ $(function() {
     loader.addClass("hidden");
     ready.removeClass("hidden");
     error.addClass("hidden");
+    displayErrors(res, ready);
+  }
+
+  function displayErrors(res, el) {
     if (res.errors) {
-      ready.find(".errors").text("Virheellisiä rivejä " + res.errorCount +
+      el.find(".errors").text("Virheellisiä rivejä " + res.errorCount +
           " kpl alkaen riviltä " + res.firstError + ".");
     } else {
-      ready.find(".errors").empty();
+      el.find(".errors").empty();
     }
   }
 
@@ -41,11 +45,12 @@ $(function() {
     error.removeClass("hidden");
   }
 
-  function handleValidationError() {
+  function handleValidationError(res) {
     loader.addClass("hidden");
     ready.addClass("hidden");
     error.addClass("hidden");
     validationError.removeClass("hidden");
+    displayErrors(res, validationError);
   }
 
   function pollResponse(res) {
@@ -53,7 +58,7 @@ $(function() {
       statusCode: {
         200: function(response) { handleReady(res, response); },
         202: function() { handlePending(); setTimeout(function() { pollResponse(res); }, 1000); },
-        400: handleValidationError,
+        400: function(response) { handleValidationError(response.responseJSON); },
         500: function() { handleError(res); }
       }
     });
