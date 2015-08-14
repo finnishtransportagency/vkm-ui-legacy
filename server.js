@@ -14,9 +14,7 @@ const server = app.listen(3000);
 
 app.locals.files = {};
 
-app.get("/", function(req, res) {
-  res.sendFile(__dirname + "/client.html");
-});
+app.get("/", (_, res) => res.sendFile(__dirname + "/client.html"));
 app.use("/bower_components", express.static("bower_components"));
 app.use("/excel_templates", express.static("excel_templates"));
 app.use("/static", express.static("static"));
