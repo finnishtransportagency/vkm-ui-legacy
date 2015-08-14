@@ -41,7 +41,7 @@ function fillMissingValuesFromBackend(table) {
   const nonEmpty = R.reject(R.isEmpty);
   const headerKeys = headersToKeys(nonEmpty(table[0]));
 
-  const coordinates = R.contains(headerKeys, COORDINATE_KEYS);
+  const coordinates = R.equals(headerKeys, COORDINATE_KEYS);
   const addresses = R.equals(headerKeys, ADDRESS_KEYS);
   const geocode = R.equals(headerKeys, GEOCODE_KEYS);
 
