@@ -2,6 +2,7 @@ const express = require("express");
 const multer  = require("multer");
 const streamifier = require("streamifier");
 const R = require("ramda");
+const errors = require('request-promise/errors');
 
 const frameOfReferenceConverter = require("./convert.js");
 
@@ -30,6 +31,7 @@ app.post("/upload", multer({
         mimetype: file.mimetype,
         buffer: data.xlsx,
         metadata: data.metadata }))
+      .catch(errors.RequestError, e => ({ valid: false }))
       .error(e => ({ valid: false, reason: PARSE_ERROR }))
       .catch(e => ({ valid: false }));
 
