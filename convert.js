@@ -3,9 +3,10 @@ const rp = require("request-promise");
 const xlsx = require("node-xlsx");
 const R = require("ramda");
 
-const API_URL = "http://10.129.65.32:8997/vkm/muunnos";
-const GEOCODE_URL = "http://10.129.65.32:8997/vkm/geocode";
-const REVERSE_GEOCODE_URL = "http://10.129.65.32:8997/vkm/reversegeocode";
+const API_URL = process.env.API_URL || "http://10.129.65.32:8997";
+const VKM_URL = API_URL + "/vkm/muunnos";
+const GEOCODE_URL = API_URL + "/vkm/geocode";
+const REVERSE_GEOCODE_URL = API_URL + "/vkm/reversegeocode";
 const HEADERS = ["X", "Y", "Tie", "Tieosa", "Etäisyys", "Ajorata", "Katuosoite", "Kunta"];
 const ERROR_HEADER = "Virheviesti";
 const COORDINATE_KEYS = ["x", "y"];
@@ -157,7 +158,7 @@ function decorateWith(inputType, outputType, values, whitelistedKeys) {
     kohdepvm: null,
     json: JSON.stringify(payload)
   };
-  return httpPost(API_URL, data).then(R.pipe(
+  return httpPost(VKM_URL, data).then(R.pipe(
         parseJSON,
         R.propOr(values, outputType.plural),
         R.map(R.pick(whitelistedKeys.concat(ERROR_KEYS))),
