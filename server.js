@@ -41,22 +41,17 @@ app.post("/upload", multer({
 }));
 
 app.get("/status/:fileName", function(req, res) {
-  const operationsByStatus = {
+  doByFileStatus(req.params.fileName, {
     ready: (file) => res.json(file.metadata),
     pending: () => res.sendStatus(202),
     error: () => res.sendStatus(500),
     badRequest: (file) => res.status(400).json(file.metadata),
     notFound: () => res.sendStatus(404)
-  };
-
-  const fileName = req.params.fileName;
-  const obj = getFile(fileName);
-  const operation = operationsByStatus[obj.status];
-  operation(obj.file);
+  });
 })
 
 app.get("/download/:fileName", function(req, res) {
-  const operations = {
+  doByFileStatus(req.params.fileName, {
     ready: (file) => {
       res.setHeader("Content-disposition", "attachment; filename=" + file.name);
       res.setHeader("Content-type", file.mimetype);
@@ -67,17 +62,18 @@ app.get("/download/:fileName", function(req, res) {
     error: () => res.sendStatus(500),
     badRequest: () => res.sendStatus(400),
     notFound: () => res.sendStatus(404)
-  };
+  });
+});
 
-  const fileName = req.params.fileName;
+function doByFileStatus(fileName, operationsByStatus) {
   const obj = getFile(fileName);
   const operation = operationsByStatus[obj.status];
   operation(obj.file);
-});
+}
 
 function getFile(fileName) {
   if (R.has(fileName, app.locals.files)) {
-    tryToUnwrapFile(app.locals.files[fileName]);
+    return tryToUnwrapFile(app.locals.files[fileName]);
   } else {
     return { status: "notFound" };
   }
@@ -93,7 +89,7 @@ function tryToUnwrapFile(promisedFile) {
   }
 }
 
-function validationStatus(file) {
+function unwrapFile(file) {
   if (file.valid) {
     return { status: "ready", file: file }
   } else if (file.reason === converter.ParseError) {

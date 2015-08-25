@@ -185,8 +185,8 @@ function addStreetAddresses(values) {
 }
 
 function addGeocodedCoordinates(values) {
-  const createQueryParams = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
-  const geocode = value => httpPost(GEOCODE_URL, { address: createQueryParams(value) });
+  const propertiesToString = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
+  const geocode = value => httpPost(GEOCODE_URL, { address: propertiesToString(value) });
   return Promise.map(values, geocode, { concurrency: CONCURRENCY_LIMIT })
     .map(R.pipe(
       parseJSON,
