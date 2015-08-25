@@ -174,7 +174,7 @@ function decorateWithReverseGeocode(values) {
 
 function decorateWithGeocode(values) {
   const createQueryParams = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
-  const geocode = value => httpGet(GEOCODE_URL, { address: createQueryParams(value) });
+  const geocode = value => httpPost(GEOCODE_URL, { address: createQueryParams(value) });
   return Promise.map(values, geocode, { concurrency: CONCURRENCY_LIMIT })
     .map(R.pipe(
       parseJSON,
