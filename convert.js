@@ -184,8 +184,12 @@ function decorateWithGeocode(values) {
 }
 
 function httpPost(url, params) {
-  return rp.post({ url: url, form: params, encoding: "utf-8" })
-    .then(x => x.replace(/ï¿½/g, "ö"));
+  return rp.post({
+    url: url,
+    form: params,
+    encoding: "utf-8",
+    headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" }
+  }).then(x => x.replace(/ï¿½/g, "ö"));
 }
 
 function httpGet(url, params) {
