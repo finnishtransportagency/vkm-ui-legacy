@@ -9,7 +9,8 @@ const converter = require("./convert.js");
 const CACHE_EXPIRATION_TIMEOUT = 60 * 60 * 1000;
 
 const app = express();
-const server = app.listen(3000);
+const port = process.env.VKM_PORT || 3000;
+const server = app.listen(port, () => console.log("Started at port " + port));
 
 app.locals.files = {};
 
