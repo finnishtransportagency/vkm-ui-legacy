@@ -40,20 +40,22 @@ app.post("/upload", multer({
 }));
 
 app.get("/status/:fileName", function(req, res) {
-  const fileName = req.params.fileName;
-
-  ifFileStatus(fileName, {
+  const operationsByStatus = {
     ready: (file) => res.json(file.metadata),
     pending: () => res.sendStatus(202),
     error: () => res.sendStatus(500),
     badRequest: (file) => res.status(400).json(file.metadata),
     notFound: () => res.sendStatus(404)
-  });
+  };
+
+  const fileName = req.params.fileName;
+  const obj = getFile(fileName);
+  const operation = operationsByStatus[obj.status];
+  operation(obj.file);
 })
 
 app.get("/download/:fileName", function(req, res) {
-  const fileName = req.params.fileName;
-  ifFileStatus(fileName, {
+  const operations = {
     ready: (file) => {
       res.setHeader("Content-disposition", "attachment; filename=" + file.name);
       res.setHeader("Content-type", file.mimetype);
@@ -64,27 +66,38 @@ app.get("/download/:fileName", function(req, res) {
     error: () => res.sendStatus(500),
     badRequest: () => res.sendStatus(400),
     notFound: () => res.sendStatus(404)
-  });
+  };
+
+  const fileName = req.params.fileName;
+  const obj = getFile(fileName);
+  const operation = operationsByStatus[obj.status];
+  operation(obj.file);
 });
 
-function ifFileStatus(fileName, callbacks) {
+function getFile(fileName) {
   if (R.has(fileName, app.locals.files)) {
-    const promisedFile = app.locals.files[fileName];
-    if (promisedFile.isFulfilled()) {
-      const file = promisedFile.value();
-      if (file.valid) {
-        callbacks.ready(file);
-      } else if (file.reason === converter.ParseError) {
-        callbacks.badRequest(file);
-      } else {
-        callbacks.error();
-      }
-    } else if (promisedFile.isPending()) {
-      callbacks.pending()
-    } else {
-      callbacks.error();
-    }
+    tryToUnwrapFile(app.locals.files[fileName]);
   } else {
-    callbacks.notFound();
+    return { status: "notFound" };
+  }
+}
+
+function tryToUnwrapFile(promisedFile) {
+  if (promisedFile.isFulfilled()) {
+    return unwrapFile(promisedFile.value());
+  } else if (promisedFile.isPending()) {
+    return { status: "pending" };
+  } else {
+    return { status: "error" };
+  }
+}
+
+function validationStatus(file) {
+  if (file.valid) {
+    return { status: "ready", file: file }
+  } else if (file.reason === converter.ParseError) {
+    return { status: "badRequest", file: file };
+  } else {
+    return { status: "error" };
   }
 }
