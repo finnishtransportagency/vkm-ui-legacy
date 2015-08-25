@@ -59,9 +59,9 @@ function addConvertedValues(values, headerKeys) {
   const addresses = R.equals(headerKeys, ADDRESS_KEYS);
   const geocode = R.equals(headerKeys, GEOCODE_KEYS);
 
-  if (coordinates) return decorateWithAddresses(values).then(decorateWithReverseGeocode);
-  if (addresses) return decorateWithCoordinates(values).then(decorateWithReverseGeocode);
-  if (geocode) return decorateWithGeocode(values).then(decorateWithAddresses);
+  if (coordinates) return addRoadAddresses(values).then(addStreetAddresses);
+  if (addresses) return addCoordinates(values).then(addStreetAddresses);
+  if (geocode) return addGeocodedCoordinates(values).then(addRoadAddresses);
   return Promise.reject(ParseError);
 }
 
@@ -151,11 +151,11 @@ function headersToKeys(headerRow) {
   return R.map(x => KEYS[HEADERS.indexOf(x)], headers);
 }
 
-function decorateWithAddresses(coordinates) {
+function addRoadAddresses(coordinates) {
   return decorateWith(LOCALIZED.coordinate, LOCALIZED.address, coordinates, ADDRESS_KEYS);
 }
 
-function decorateWithCoordinates(addresses) {
+function addCoordinates(addresses) {
   return decorateWith(LOCALIZED.address, LOCALIZED.coordinate, addresses, COORDINATE_KEYS);
 }
 
@@ -177,14 +177,14 @@ function decorateWith(inputType, outputType, values, whitelistedKeys) {
         R.map(validate)));
 }
 
-function decorateWithReverseGeocode(values) {
+function addStreetAddresses(values) {
   const reverseGeocode = value => httpGet(REVERSE_GEOCODE_URL, R.pick(COORDINATE_KEYS, value));
   return Promise.map(values, reverseGeocode, { concurrency: CONCURRENCY_LIMIT })
     .map(R.compose(R.pick(GEOCODE_KEYS), parseJSON))
     .then(decorate(values));
 }
 
-function decorateWithGeocode(values) {
+function addGeocodedCoordinates(values) {
   const createQueryParams = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
   const geocode = value => httpPost(GEOCODE_URL, { address: createQueryParams(value) });
   return Promise.map(values, geocode, { concurrency: CONCURRENCY_LIMIT })
