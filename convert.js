@@ -151,8 +151,13 @@ function headersToKeys(headerRow) {
   return R.map(x => KEYS[HEADERS.indexOf(x)], headers);
 }
 
-const decorateWithAddresses = (coordinates) => decorateWith(LOCALIZED.coordinate, LOCALIZED.address, coordinates, ADDRESS_KEYS);
-const decorateWithCoordinates = (addresses) => decorateWith(LOCALIZED.address, LOCALIZED.coordinate, addresses, COORDINATE_KEYS);
+function decorateWithAddresses(coordinates) {
+  return decorateWith(LOCALIZED.coordinate, LOCALIZED.address, coordinates, ADDRESS_KEYS);
+}
+
+function decorateWithCoordinates(addresses) {
+  return decorateWith(LOCALIZED.address, LOCALIZED.coordinate, addresses, COORDINATE_KEYS);
+}
 
 function decorateWith(inputType, outputType, values, whitelistedKeys) {
   const payload = {};
