@@ -28,37 +28,40 @@ const LOCALIZED = {
 const MISSING_VALUE_ERROR = "Kohdetta ei löytynyt";
 const CONCURRENCY_LIMIT = 5;
 
-exports.convert = function(buffer) {
-  const parseInput = Promise.method(buffer => xlsx.parse(buffer)[0])
-
-  return parseInput(buffer).catch(_ => Promise.reject(ParseError)).then(worksheet =>
-      fillMissingValuesFromBackend(worksheet.data)
-        .then(buildOutput(worksheet.name)));
-}
-
 const ParseError = Symbol();
 exports.ParseError = ParseError;
 
-function fillMissingValuesFromBackend(table) {
+exports.convert = function(buffer) {
+  const parseInput = Promise.method(buffer => xlsx.parse(buffer)[0]);
+  const addConvertedValuesAndBuildOutput = (worksheet) =>
+    addConvertedValuesIfValid(worksheet.data).then(buildOutput(worksheet.name));
+
+  return parseInput(buffer)
+    .catch(_ => Promise.reject(ParseError))
+    .then(addConvertedValuesAndBuildOutput);
+}
+
+function addConvertedValuesIfValid(table) {
   const values = parseTable(table);
-  const validate = x => R.any(R.or(R.isNil, R.isEmpty), R.values(x));
+  const headerKeys = headersToKeys(table[0]);
   const valid = !R.any(R.isNil, R.flatten(R.map(R.values, values)));
 
   if (valid) {
-    const nonEmpty = R.reject(R.isEmpty);
-    const headerKeys = headersToKeys(nonEmpty(table[0]));
-
-    const coordinates = R.equals(headerKeys, COORDINATE_KEYS);
-    const addresses = R.equals(headerKeys, ADDRESS_KEYS);
-    const geocode = R.equals(headerKeys, GEOCODE_KEYS);
-
-    if (coordinates) return decorateWithAddresses(values).then(decorateWithReverseGeocode);
-    if (addresses) return decorateWithCoordinates(values).then(decorateWithReverseGeocode);
-    if (geocode) return decorateWithGeocode(values).then(decorateWithAddresses);
+    return addConvertedValues(values, headerKeys);
   } else {
+    const validate = x => R.any(R.or(R.isNil, R.isEmpty), R.values(x));
     return Promise.reject(validationError(validate, values));
   }
+}
 
+function addConvertedValues(values, headerKeys) {
+  const coordinates = R.equals(headerKeys, COORDINATE_KEYS);
+  const addresses = R.equals(headerKeys, ADDRESS_KEYS);
+  const geocode = R.equals(headerKeys, GEOCODE_KEYS);
+
+  if (coordinates) return decorateWithAddresses(values).then(decorateWithReverseGeocode);
+  if (addresses) return decorateWithCoordinates(values).then(decorateWithReverseGeocode);
+  if (geocode) return decorateWithGeocode(values).then(decorateWithAddresses);
   return Promise.reject(ParseError);
 }
 
@@ -143,7 +146,10 @@ function tableToObjects(table) {
 // > headersToKeys(["Etäisyys", "Katuosoite", "Kunta"])
 // ["etaisyys", "osoite", "kunta"]
 
-const headersToKeys = R.map((x) => KEYS[HEADERS.indexOf(x)]);
+function headersToKeys(headerRow) {
+  const headers = R.reject(R.isEmpty, headerRow);
+  return R.map(x => KEYS[HEADERS.indexOf(x)], headers);
+}
 
 const decorateWithAddresses = (coordinates) => decorateWith(LOCALIZED.coordinate, LOCALIZED.address, coordinates, ADDRESS_KEYS);
 const decorateWithCoordinates = (addresses) => decorateWith(LOCALIZED.address, LOCALIZED.coordinate, addresses, COORDINATE_KEYS);
