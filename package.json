@@ -1,6 +1,6 @@
 {
   "name": "vkm",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "dependencies": {
     "bluebird": "2.9.30",
     "doctest": "0.8.0",
