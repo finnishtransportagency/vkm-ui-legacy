@@ -15,6 +15,7 @@
   "devDependencies": {},
   "scripts": {
     "postinstall": "node_modules/bower/bin/bower install",
+    "start": "node --harmony server.js",
     "test": "doctest --nodejs --harmony --module commonjs convert.js"
   }
 }
