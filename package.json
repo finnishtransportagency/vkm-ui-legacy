@@ -9,10 +9,12 @@
     "node-xlsx": "0.5.1",
     "ramda": "0.15.1",
     "request-promise": "0.4.2",
-    "streamifier": "0.1.1"
+    "streamifier": "0.1.1",
+    "bower": "1.5.2"
   },
   "devDependencies": {},
   "scripts": {
+    "postinstall": "node_modules/bower/bin/bower install",
     "test": "doctest --nodejs --harmony --module commonjs convert.js"
   }
 }
