@@ -14,10 +14,9 @@ const server = app.listen(port, () => console.log("Started at port " + port));
 
 app.locals.files = {};
 
-app.get("/", (_, res) => res.sendFile(__dirname + "/client.html"));
+app.use("/", express.static("public"));
 app.use("/bower_components", express.static("bower_components"));
 app.use("/excel_templates", express.static("excel_templates"));
-app.use("/public", express.static("public"));
 
 app.post("/upload", multer({
   inMemory: true,
