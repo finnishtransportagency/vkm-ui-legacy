@@ -4,7 +4,7 @@ const streamifier = require("streamifier");
 const R = require("ramda");
 const errors = require('request-promise/errors');
 
-const converter = require("./convert.js");
+const converter = require("./lib/convert.js");
 
 const CACHE_EXPIRATION_TIMEOUT = 60 * 60 * 1000;
 
