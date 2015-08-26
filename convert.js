@@ -26,7 +26,7 @@ const LOCALIZED = {
   }
 };
 const MISSING_VALUE_ERROR = "Kohdetta ei löytynyt";
-const CONCURRENCY_LIMIT = 5;
+const CONCURRENT_REQUEST_LIMIT = 5;
 
 const ParseError = Symbol("ParseError");
 exports.ParseError = ParseError;
@@ -179,7 +179,7 @@ function decorateWith(inputType, outputType, values, whitelistedKeys) {
 
 function addStreetAddresses(values) {
   const reverseGeocode = value => httpGet(REVERSE_GEOCODE_URL, R.pick(COORDINATE_KEYS, value));
-  return Promise.map(values, reverseGeocode, { concurrency: CONCURRENCY_LIMIT })
+  return Promise.map(values, reverseGeocode, { concurrency: CONCURRENT_REQUEST_LIMIT })
     .map(R.compose(R.pick(GEOCODE_KEYS), parseJSON))
     .then(mergeAllWith(values));
 }
@@ -187,7 +187,7 @@ function addStreetAddresses(values) {
 function addGeocodedCoordinates(values) {
   const propertiesToString = R.compose(R.join(", "), R.values, R.pick(GEOCODE_KEYS));
   const geocode = value => httpPost(GEOCODE_URL, { address: propertiesToString(value) });
-  return Promise.map(values, geocode, { concurrency: CONCURRENCY_LIMIT })
+  return Promise.map(values, geocode, { concurrency: CONCURRENT_REQUEST_LIMIT })
     .map(R.pipe(
       parseJSON,
       R.prop("results"),
