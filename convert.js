@@ -173,7 +173,7 @@ function decorateWith(inputType, outputType, values, whitelistedKeys) {
         parseJSON,
         R.propOr(values, outputType.plural),
         R.map(R.pick(whitelistedKeys.concat(ERROR_KEYS))),
-        decorate(values),
+        mergeAllWith(values),
         R.map(validate)));
 }
 
@@ -181,7 +181,7 @@ function addStreetAddresses(values) {
   const reverseGeocode = value => httpGet(REVERSE_GEOCODE_URL, R.pick(COORDINATE_KEYS, value));
   return Promise.map(values, reverseGeocode, { concurrency: CONCURRENCY_LIMIT })
     .map(R.compose(R.pick(GEOCODE_KEYS), parseJSON))
-    .then(decorate(values));
+    .then(mergeAllWith(values));
 }
 
 function addGeocodedCoordinates(values) {
@@ -192,7 +192,7 @@ function addGeocodedCoordinates(values) {
       parseJSON,
       R.prop("results"),
       headOr({valid: false, error: MISSING_VALUE_ERROR})))
-    .then(decorate(values));
+    .then(mergeAllWith(values));
 }
 
 function httpPost(url, params) {
@@ -212,15 +212,15 @@ function parseJSON(str) {
   return str.trim() ? JSON.parse(str) : {};
 }
 
-// decorate :: [Object] -> [String] -> [Object]
+// mergeAllWith :: [Object] -> [Object] -> [Object]
 //
-// > decorate([{x: 1, y: 2}])([{tie: 3}])
+// > mergeAllWith([{x: 1, y: 2}])([{tie: 3}])
 // [{x: 1, y: 2, tie: 3}]
 //
-// > decorate([{x: 1}])([{x: 2}])
+// > mergeAllWith([{x: 1}])([{x: 2}])
 // [{x: 1}]
 
-function decorate(xs) {
+function mergeAllWith(xs) {
   const defaults = R.flip(R.merge);
   return R.zipWith(defaults, xs);
 }
