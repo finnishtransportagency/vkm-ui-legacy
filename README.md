@@ -4,10 +4,10 @@
 
 1. [Asenna node.js](https://nodejs.org/) (versio 0.12.7 tai uudempi)
 
-1. Kloonaa viitekehysmuunnin-repo
+1. Kloonaa vkm-repo
 
   ```
-  git clone https://github.com/finnishtransportagency/viitekehysmuunnin.git
+  git clone https://github.com/finnishtransportagency/vkm.git
   ```
 
 1. Hae ja asenna projektin tarvitsemat riippuvuudet hakemistoon, johon projekti on kloonattu
