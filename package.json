@@ -1,8 +1,6 @@
 {
   "name": "vkm",
   "version": "0.1.0",
-  "description": "",
-  "main": "app.js",
   "dependencies": {
     "bluebird": "2.9.30",
     "doctest": "0.8.0",
@@ -16,7 +14,5 @@
   "devDependencies": {},
   "scripts": {
     "test": "doctest --nodejs --harmony --module commonjs convert.js"
-  },
-  "author": "",
-  "license": "ISC"
+  }
 }
