@@ -28,7 +28,7 @@ const LOCALIZED = {
 const MISSING_VALUE_ERROR = "Kohdetta ei löytynyt";
 const CONCURRENCY_LIMIT = 5;
 
-const ParseError = Symbol();
+const ParseError = Symbol("ParseError");
 exports.ParseError = ParseError;
 
 exports.convert = function(buffer) {
