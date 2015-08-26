@@ -39,7 +39,7 @@ exports.convert = function(buffer) {
   return parseInput(buffer)
     .catch(_ => Promise.reject(ParseError))
     .then(addConvertedValuesAndBuildOutput);
-}
+};
 
 function addConvertedValuesIfValid(table) {
   const values = parseTable(table);
@@ -78,7 +78,7 @@ function buildOutput(fileName) {
       xlsx: xlsx.build([{name: fileName, data: table }]),
       metadata: metadata
     };
-  }
+  };
 }
 
 function getMetadata(data) {
@@ -96,7 +96,7 @@ function validationError(validationFn, data) {
     errors: true,
     errorCount: R.filter(validationFn, data).length,
     firstError: R.findIndex(validationFn, data) + rowOffset
-  }
+  };
 }
 
 // parseTable :: [[String]] -> [Object]
@@ -235,7 +235,7 @@ function decorate(xs) {
 function headOr(defaultVal) {
   return function(xs) {
     return xs.length > 0 ? xs[0] : defaultVal;
-  }
+  };
 }
 
 

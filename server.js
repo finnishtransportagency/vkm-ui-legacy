@@ -47,7 +47,7 @@ app.get("/status/:fileName", function(req, res) {
     badRequest: (file) => res.status(400).json(file.metadata),
     notFound: () => res.sendStatus(404)
   });
-})
+});
 
 app.get("/download/:fileName", function(req, res) {
   doByFileStatus(req.params.fileName, {
@@ -90,7 +90,7 @@ function tryToUnwrapFile(promisedFile) {
 
 function unwrapFile(file) {
   if (file.valid) {
-    return { status: "ready", file: file }
+    return { status: "ready", file: file };
   } else if (file.reason === converter.ParseError) {
     return { status: "badRequest", file: file };
   } else {
