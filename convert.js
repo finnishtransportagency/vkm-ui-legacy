@@ -3,7 +3,7 @@ const rp = require("request-promise");
 const xlsx = require("node-xlsx");
 const R = require("ramda");
 
-const API_URL = process.env.VKM_API_URL || "http://10.129.65.32:8997";
+const API_URL = process.env.VKM_API_URL || "http://10.129.65.37:8997";
 const VKM_URL = API_URL + "/vkm/muunnos";
 const GEOCODE_URL = API_URL + "/vkm/geocode";
 const REVERSE_GEOCODE_URL = API_URL + "/vkm/reversegeocode";
