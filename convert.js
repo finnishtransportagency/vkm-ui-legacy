@@ -225,20 +225,6 @@ function mergeAllWith(xs) {
   return R.zipWith(defaults, xs);
 }
 
-// headOr :: a -> [a] -> a
-//
-// > headOr(1)([2])
-// 2
-//
-// > headOr(1)([])
-// 1
-function headOr(defaultVal) {
-  return function(xs) {
-    return xs.length > 0 ? xs[0] : defaultVal;
-  };
-}
-
-
 // validate :: Object -> Object
 //
 // > validate({palautusarvo: 0, virheteksti: "Kohdetta ei löytynyt"})
@@ -251,4 +237,17 @@ function validate(x) {
   if (R.has("valid", x)) return x;
   const validationStatus = x.palautusarvo === 1 ? { valid: true } : { valid: false, error: x.virheteksti };
   return R.merge(R.omit(EXTERNAL_ERROR_KEYS, x), validationStatus);
+}
+
+// headOr :: a -> [a] -> a
+//
+// > headOr(1)([2])
+// 2
+//
+// > headOr(1)([])
+// 1
+function headOr(defaultVal) {
+  return function(xs) {
+    return xs.length > 0 ? xs[0] : defaultVal;
+  };
 }
