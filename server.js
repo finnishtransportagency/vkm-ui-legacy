@@ -17,7 +17,7 @@ app.locals.files = {};
 app.get("/", (_, res) => res.sendFile(__dirname + "/client.html"));
 app.use("/bower_components", express.static("bower_components"));
 app.use("/excel_templates", express.static("excel_templates"));
-app.use("/static", express.static("static"));
+app.use("/public", express.static("public"));
 
 app.post("/upload", multer({
   inMemory: true,
