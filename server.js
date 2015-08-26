@@ -3,6 +3,7 @@ const multer  = require("multer");
 const streamifier = require("streamifier");
 const R = require("ramda");
 const errors = require('request-promise/errors');
+const Promise = require("bluebird");
 
 const converter = require("./lib/convert.js");
 
@@ -29,7 +30,7 @@ app.post("/upload", multer({
         buffer: data.xlsx,
         metadata: data.metadata }))
       .catch(errors.RequestError, e => ({ valid: false, reason: errors.RequestError }))
-      .error(e => ({ valid: false, reason: converter.ParseError, metadata: e }))
+      .catch(Promise.OperationalError, e => ({ valid: false, reason: Promise.OperationalError, metadata: e }))
       .catch(e => ({ valid: false }));
 
     app.locals.files[file.name] = promisedFile;
@@ -91,7 +92,7 @@ function tryToUnwrapFile(promisedFile) {
 function unwrapFile(file) {
   if (file.valid) {
     return { status: "ready", file: file };
-  } else if (file.reason === converter.ParseError) {
+  } else if (file.reason === Promise.OperationalError) {
     return { status: "badRequest", file: file };
   } else {
     return { status: "error" };
