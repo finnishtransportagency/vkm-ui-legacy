@@ -19,12 +19,19 @@
 
 ## Ajaminen
 
-1. Käyttöliittymän serveri käyttää oletusarvoisesti porttia 3000. Käytettävää porttia voi vaihtaa asettamalla arvo ympäristömuuttujaan `VKM_PORT`.
-
-1. Käyttöliittymä ottaa oletusarvoisesti viitekehysmuuntimen rajapintaan yhteyttä osoitteeseen http://10.129.65.37:8997. Rajapinnan osoitetta voi vaihtaa ympäristömuuttujalla `VKM_API_URL`.
-
-1. Käynnistä käyttöliittymän serveri
+Sovellus käynnistetään komennolla:
 
   ```
   npm start
   ```
+
+Sovellus käyttää oletusarvoisesti porttia 3000. Käytettävää porttia voi vaihtaa asettamalla arvo ympäristömuuttujaan `VKM_PORT`.
+
+Sovellus ottaa oletusarvoisesti viitekehysmuuntimen rajapintaan yhteyttä osoitteeseen http://10.129.65.37:8997. Rajapinnan osoitetta voi vaihtaa ympäristömuuttujalla `VKM_API_URL`.
+
+Esimerkki ympäristömuuttujien käytöstä:
+
+  ```
+  VKM_PORT=3000 VKM_API_URL=http://10.129.65.37:8997 npm start
+  ```
+
