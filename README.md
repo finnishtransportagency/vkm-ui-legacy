@@ -13,7 +13,7 @@
 1. Hae ja asenna projektin tarvitsemat riippuvuudet hakemistoon, johon projekti on kloonattu
 
   ```
-  cd viitekehysmuunnin
+  cd vkm
   npm install
   ```
 
