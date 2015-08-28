@@ -46,7 +46,7 @@ app.get("/status/:fileName", function(req, res) {
     ready: (file) => res.json(file.metadata),
     pending: () => res.sendStatus(202),
     error: () => res.sendStatus(500),
-    badRequest: (file) => res.status(400).json(file.metadata),
+    badRequest: (file) => res.status(400).json(file.metadata.cause),
     notFound: () => res.sendStatus(404)
   });
 });
