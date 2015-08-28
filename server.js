@@ -31,7 +31,10 @@ app.post("/upload", multer({
         metadata: data.metadata }))
       .catch(errors.RequestError, e => ({ valid: false, reason: errors.RequestError }))
       .catch(Promise.OperationalError, e => ({ valid: false, reason: Promise.OperationalError, metadata: e }))
-      .catch(e => ({ valid: false }));
+      .catch(e => {
+        console.log(e.stack);
+        return { valid: false };
+      });
 
     app.locals.files[file.name] = promisedFile;
     res.end(file.name, "utf-8");
