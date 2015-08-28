@@ -54,7 +54,7 @@ $(function() {
   }
 
   function pollResponse(res) {
-    $.ajax("/status/" + res, {
+    $.ajax("status/" + res, {
       statusCode: {
         200: function(response) { handleReady(res, response); },
         202: function() { handlePending(); setTimeout(function() { pollResponse(res); }, 1000); },
@@ -70,7 +70,7 @@ $(function() {
     handlePending();
 
     $.ajax({
-      url: "/upload",
+      url: "upload",
       type: "POST",
       data: new FormData($(this)[0]),
       cache: false,
