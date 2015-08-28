@@ -2,7 +2,6 @@ const express = require("express");
 const multer  = require("multer");
 const streamifier = require("streamifier");
 const R = require("ramda");
-const errors = require('request-promise/errors');
 const Promise = require("bluebird");
 
 const converter = require("./lib/convert.js");
@@ -29,7 +28,6 @@ app.post("/upload", multer({
         mimetype: file.mimetype,
         buffer: data.xlsx,
         metadata: data.metadata }))
-      .catch(errors.RequestError, e => ({ valid: false, reason: errors.RequestError }))
       .catch(Promise.OperationalError, e => ({ valid: false, reason: Promise.OperationalError, metadata: e }))
       .catch(e => {
         console.log(e.stack);
