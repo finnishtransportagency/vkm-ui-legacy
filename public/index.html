@@ -78,16 +78,24 @@
 
 			<p>Muunnettavat tiedot syötetään Excel-tiedostopohjaan, joka lähetetään sovellukselle. Se valitsee
 			muunnostyypin automaattisesti muunnettavan tiedoston sarakkeiden perusteella ja
-			palauttaa muunnetun tiedoston, johon on lisätty muunnoksen lopputuloksen sisältävät sarakkeet.</p>
+			palauttaa muunnetun tiedoston, johon on lisätty muunnoksen lopputuloksen sisältävät sarakkeet. 
+			Muuntimen palauttamaa taulukkoa ei kannata lähettää uudestaan, siirrä tiedot Viitekehysmuuntimesta 
+			ladattuun tiedostoon.</p>
 
 			<p>Excel-pohjaan ei saa lisätä uusia sarakkeita, eikä sarakkeiden järjestystä saa muuttaa.
 			Tiedostossa saa olla vain yksi taulukko (eli välilehti). Tiedoston nimessä ei saa olla välilyöntejä.</p>
 
 			<p>Muunnoksissa käytetään ETRS-TM35FIN-tasokoordinaatteja. X on itäkoordinaatti ja Y pohjoiskoordinaatti.
 			Muunnettavien tietojen desimaalierottimena voi olla pilkku tai piste.</p>
+			
+			<p>Käytössä havaitut muunnosten enimmäisrivimäärät:</p>
+			<ul>
+			<li>Tieosoitteille ajanhetki enintään 50 000 riviä.
+			<li>Koordinaateille enintään 5000 riviä.
+			</ul>
 
 			<h4>Muunnoskohtaisia ohjeita</h4>
-
+			
 			<u>Koordinaattien muuntaminen</u>
 
 			<p>Munnoksessa käytetään 500 metrin hakusädettä. Sovellus palauttaa sen sisältä löytyvän
@@ -97,6 +105,8 @@
 
 			<p><i>Tilannepvm</i> on se päivämäärä, jonka tilanteessa muunnettava tieosoite on ja <i>kohdepvm</i> se
 			päivämäärä, jonka mukainen tieosoite muunnoksesta saadaan.</p>
+			
+			<p>Ajanhetkimuunnoksessa käytetään vain ensimmäisen rivin päivämääriä, vaikka kaikille riveille pitää syöttää jotkut validit päivämäärät.</p>
 
 			<u>Tieosoitevälien muuntaminen</u>
 
