@@ -18,7 +18,7 @@ app.use("/", express.static("public"));
 app.use("/bower_components", express.static("bower_components"));
 app.use("/excel_templates", express.static("excel_templates"));
 
-app.post("/upload", multer({
+app.post("/upload", function(req, res){multer({
   inMemory: true,
   onFileUploadComplete: function(file, req, res) {
     const promisedFile = converter.convert(file.buffer)
@@ -39,7 +39,7 @@ app.post("/upload", multer({
     promisedFile.delay(CACHE_EXPIRATION_TIMEOUT)
       .finally(() => { delete app.locals.files[file.name]; });
   }
-}));
+})});
 
 app.get("/status/:fileName", function(req, res) {
   doByFileStatus(req.params.fileName, {
