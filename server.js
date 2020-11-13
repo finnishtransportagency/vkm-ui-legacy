@@ -11,6 +11,8 @@ const CACHE_EXPIRATION_TIMEOUT = 60 * 60 * 1000;
 const app = express();
 const port = process.env.VKM_PORT || 3000;
 const server = app.listen(port, () => console.log("Started at port " + port));
+var storage = multer.memoryStorage();
+var upload = multer({ storage: storage });
 
 app.locals.files = {};
 
@@ -18,14 +20,12 @@ app.use("/", express.static("public"));
 app.use("/bower_components", express.static("bower_components"));
 app.use("/excel_templates", express.static("excel_templates"));
 
-app.post("/upload", function(req, res){multer({
-  inMemory: true,
-  onFileUploadComplete: function(file, req, res) {
-    const promisedFile = converter.convert(file.buffer)
+app.post("/upload", upload.single('file'), function (req, res) {
+  const promisedFile = converter.convert(req.file.buffer)
       .then(data => ({
         valid: true,
-        name: file.originalname,
-        mimetype: file.mimetype,
+        name: req.file.originalname,
+        mimetype: req.file.mimetype,
         buffer: data.xlsx,
         metadata: data.metadata }))
       .catch(Promise.OperationalError, e => ({ valid: false, reason: Promise.OperationalError, metadata: e }))
@@ -34,12 +34,11 @@ app.post("/upload", function(req, res){multer({
         return { valid: false };
       });
 
-    app.locals.files[file.name] = promisedFile;
-    res.end(file.name, "utf-8");
+    app.locals.files[req.file.originalname] = promisedFile;
+    res.end(req.file.originalname, "utf-8");
     promisedFile.delay(CACHE_EXPIRATION_TIMEOUT)
-      .finally(() => { delete app.locals.files[file.name]; });
-  }
-})});
+      .finally(() => { delete app.locals.files[req.file.originalname]; });
+});
 
 app.get("/status/:fileName", function(req, res) {
   doByFileStatus(req.params.fileName, {

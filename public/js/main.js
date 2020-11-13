@@ -1,4 +1,4 @@
-$(function() {
+﻿$(function() {
   var fileName = window.location.hash.substring(1);
   if (fileName) { pollResponse(fileName); }
 
