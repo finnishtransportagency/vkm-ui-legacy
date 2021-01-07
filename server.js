@@ -11,14 +11,17 @@ const CACHE_EXPIRATION_TIMEOUT = 60 * 60 * 1000;
 const app = express();
 const port = process.env.VKM_PORT || 3000;
 const server = app.listen(port, () => console.log("Started at port " + port));
+
 var storage = multer.memoryStorage();
 var upload = multer({ storage: storage });
+
 
 app.locals.files = {};
 
 app.use("/", express.static("public"));
 app.use("/bower_components", express.static("bower_components"));
 app.use("/excel_templates", express.static("excel_templates"));
+
 
 app.post("/upload", upload.single('file'), function (req, res) {
   const promisedFile = converter.convert(req.file.buffer)
@@ -40,6 +43,7 @@ app.post("/upload", upload.single('file'), function (req, res) {
       .finally(() => { delete app.locals.files[req.file.originalname]; });
 });
 
+
 app.get("/status/:fileName", function(req, res) {
   doByFileStatus(req.params.fileName, {
     ready: (file) => res.json(file.metadata),
@@ -49,6 +53,7 @@ app.get("/status/:fileName", function(req, res) {
     notFound: () => res.sendStatus(404)
   });
 });
+
 
 app.get("/download/:fileName", function(req, res) {
   doByFileStatus(req.params.fileName, {
@@ -65,11 +70,13 @@ app.get("/download/:fileName", function(req, res) {
   });
 });
 
+
 function doByFileStatus(fileName, operationsByStatus) {
   const obj = getFile(fileName);
   const operation = operationsByStatus[obj.status];
   operation(obj.file);
 }
+
 
 function getFile(fileName) {
   if (R.has(fileName, app.locals.files)) {
@@ -78,6 +85,7 @@ function getFile(fileName) {
     return { status: "notFound" };
   }
 }
+
 
 function tryToUnwrapFile(promisedFile) {
   if (promisedFile.isFulfilled()) {
@@ -88,6 +96,7 @@ function tryToUnwrapFile(promisedFile) {
     return { status: "error" };
   }
 }
+
 
 function unwrapFile(file) {
   if (file.valid) {
