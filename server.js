@@ -4,7 +4,7 @@ const streamifier = require("streamifier");
 const R = require("ramda");
 const Promise = require("bluebird");
 
-const converter = require("./lib/convert4.js");
+const converter = require("./lib/convert.js");
 
 const CACHE_EXPIRATION_TIMEOUT = 60 * 60 * 1000;
 
