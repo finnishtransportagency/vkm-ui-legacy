@@ -24,10 +24,14 @@ app.use("/excel_templates", express.static("excel_templates"));
 
 
 app.post("/upload", upload.single('file'), function (req, res) {
+  var filenameBodyNew = req.file.originalname.split('.').shift() + '_TULOS';
+  var filenameExtension = '.' + req.file.originalname.split('.').pop();
+  var filenameResult = filenameBodyNew + filenameExtension;
   const promisedFile = converter.convert(req.file.buffer)
       .then(data => ({
         valid: true,
-        name: req.file.originalname,
+	name: filenameResult,
+        //name: req.file.originalname,
         mimetype: req.file.mimetype,
         buffer: data.xlsx,
         metadata: data.metadata }))
@@ -37,10 +41,15 @@ app.post("/upload", upload.single('file'), function (req, res) {
         return { valid: false };
       });
 
-    app.locals.files[req.file.originalname] = promisedFile;
-    res.end(req.file.originalname, "utf-8");
+    app.locals.files[filenameResult] = promisedFile;
+    res.end(filenameResult, "utf-8");
     promisedFile.delay(CACHE_EXPIRATION_TIMEOUT)
-      .finally(() => { delete app.locals.files[req.file.originalname]; });
+      .finally(() => { delete app.locals.files[filenameResult]; });
+
+    //app.locals.files[req.file.originalname] = promisedFile;
+    //res.end(req.file.originalname, "utf-8");
+    //promisedFile.delay(CACHE_EXPIRATION_TIMEOUT)
+      //.finally(() => { delete app.locals.files[req.file.originalname]; });
 });
 
 
